@@ -16,8 +16,10 @@ import { MonitoringState } from 'src/reducers/observe';
 import { usePerses } from './perses/usePerses';
 import { PersesBoard } from './perses/perses-dashboards';
 import { ProjectBar } from './perses/project/ProjectBar';
-import { LEGACY_DASHBOARDS_KEY } from './perses/project/utils';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useActiveProject } from './perses/project/useActiveProject';
+import { LEGACY_DASHBOARDS_KEY } from './perses/project/utils';
+import { useBoolean } from '../hooks/useBoolean';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,27 +42,35 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
   urlBoard,
   namespace,
 }) => {
-  const isPerses = namespace !== LEGACY_DASHBOARDS_KEY;
+  const { projects, projectsLoading } = usePerses();
+  const persesAvailable = !projectsLoading && projects;
+  const { activeProject } = useActiveProject();
   const { perspective } = usePerspective();
+  const [initialPageLoad, , , setInitialPageLoadFalse] = useBoolean(true);
   const board = useSelector((state: MonitoringState) =>
     getObserveState(perspective, state)?.getIn(['dashboards', perspective, 'name']),
   );
 
   const [boards, isLoading, error] = useFetchDashboards(namespace);
-  const { getDashboards, dashboards } = usePerses();
-
-  // Called only once on mount
-  React.useEffect(() => {
-    getDashboards();
-  }, [getDashboards]);
+  const { dashboards, dashboardsLoading } = usePerses();
+  const loading = React.useMemo(() => {
+    if (!initialPageLoad) {
+      return false;
+    }
+    if (!(isLoading || projectsLoading || dashboardsLoading)) {
+      setInitialPageLoadFalse();
+      return false;
+    }
+    return true;
+  }, [isLoading, projectsLoading, dashboardsLoading, initialPageLoad, setInitialPageLoadFalse]);
 
   const boardItems = React.useMemo(() => {
-    const ocpBoardItems = _.mapValues(_.mapKeys(boards, 'name'), (b, name) => ({
-      tags: b.data?.tags,
-      title: b.data?.title ?? name,
-    }));
-
-    if (dashboards) {
+    if (activeProject === LEGACY_DASHBOARDS_KEY) {
+      return _.mapValues(_.mapKeys(boards, 'name'), (b, name) => ({
+        tags: b.data?.tags,
+        title: b.data?.title ?? name,
+      }));
+    } else {
       const persesKeys = _.mapKeys(dashboards, function (item) {
         return item?.metadata?.name;
       });
@@ -68,10 +78,9 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
         tags: ['perses'],
         title: `${b.metadata?.project} / ${b.metadata?.name}`,
       }));
-      return { ...persesBoardItems, ...ocpBoardItems };
+      return persesBoardItems;
     }
-    return ocpBoardItems;
-  }, [boards, dashboards]);
+  }, [boards, dashboards, activeProject]);
 
   // If we don't find any rows, build the rows array based on what we have in `data.panels`
   const rows = React.useMemo(() => {
@@ -104,9 +113,9 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
       <ProjectBar />
       <DashboardSkeleton urlBoard={urlBoard} boards={boards} boardItems={boardItems}>
         <Overview>
-          {isLoading ? (
+          {loading ? (
             <LoadingInline />
-          ) : isPerses ? (
+          ) : persesAvailable && activeProject !== LEGACY_DASHBOARDS_KEY ? (
             <PersesBoard board={board} perspective={perspective} />
           ) : (
             <LegacyDashboard key={board} rows={rows} perspective={perspective} />

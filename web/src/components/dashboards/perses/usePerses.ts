@@ -1,11 +1,7 @@
-import { useBoolean } from '../../hooks/useBoolean';
 import { fetchPersesProjects, fetchPersesDashboardsMetadata } from './perses-client';
 import { useQuery } from '@tanstack/react-query';
 
 export const usePerses = () => {
-  // Start the queries off as disabled initially, then once triggered start polling
-  const [dashboardsEnabled, , getDashboards] = useBoolean(false);
-
   const {
     isLoading: projectsLoading,
     error: projectsError,
@@ -23,16 +19,15 @@ export const usePerses = () => {
   } = useQuery({
     queryKey: ['dashboards'],
     queryFn: fetchPersesDashboardsMetadata,
-    enabled: dashboardsEnabled,
+    enabled: true,
   });
 
   return {
     dashboards,
-    projectsLoading,
     dashboardsError,
-    getDashboards,
-    projects,
     dashboardsLoading,
+    projectsLoading,
+    projects,
     projectsError,
   };
 };
