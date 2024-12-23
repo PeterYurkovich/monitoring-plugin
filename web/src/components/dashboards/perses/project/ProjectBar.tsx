@@ -1,49 +1,25 @@
 import * as React from 'react';
-import { default as classNames } from 'classnames';
 import { KEYBOARD_SHORTCUTS } from './utils';
 import ProjectDropdown from './ProjectDropdown';
-import { useActiveProject } from './useActiveProject';
-
-export type ProjectBarDropdownsProps = {
-  children: React.ReactNode;
-  isDisabled: boolean;
-};
-
-export const ProjectBarDropdowns: React.FC<ProjectBarDropdownsProps> = ({
-  children,
-  isDisabled,
-}) => {
-  const { activeProject, setActiveProject } = useActiveProject();
-  return (
-    <div className="co-project-bar__items" data-test-id="project-bar-dropdown">
-      <ProjectDropdown
-        onSelect={(event, newProject) => {
-          setActiveProject(newProject);
-        }}
-        selected={activeProject}
-        disabled={isDisabled}
-        shortCut={KEYBOARD_SHORTCUTS.focusNamespaceDropdown}
-      />
-      {children}
-    </div>
-  );
-};
-
-export const ProjectBar: React.FC<ProjectBarProps & { hideProjects?: boolean }> = ({
-  isDisabled,
-  children,
-}) => {
-  return (
-    <div className={classNames('co-project-bar')}>
-      <ProjectBarDropdowns isDisabled={isDisabled}>{children}</ProjectBarDropdowns>
-    </div>
-  );
-};
+import { default as classNames } from 'classnames';
 
 export type ProjectBarProps = {
-  isDisabled?: boolean;
-  children?: React.ReactNode;
+  setActiveProject: React.Dispatch<React.SetStateAction<string>>;
+  activeProject: string;
 };
 
-// Flag detection is not complete if the flag's value is `undefined`.
-export const flagPending = (flag: boolean) => flag === undefined;
+export const ProjectBar: React.FC<ProjectBarProps> = ({ setActiveProject, activeProject }) => {
+  return (
+    <div className={classNames('co-project-bar')}>
+      <div className="co-project-bar__items" data-test-id="project-bar-dropdown">
+        <ProjectDropdown
+          onSelect={(event, newProject) => {
+            setActiveProject(newProject);
+          }}
+          selected={activeProject}
+          shortCut={KEYBOARD_SHORTCUTS.focusNamespaceDropdown}
+        />
+      </div>
+    </div>
+  );
+};

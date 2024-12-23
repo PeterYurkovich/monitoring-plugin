@@ -44,7 +44,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
 }) => {
   const { projects, projectsLoading } = usePerses();
   const persesAvailable = !projectsLoading && projects;
-  const { activeProject } = useActiveProject();
+  const { activeProject, setActiveProject } = useActiveProject();
   const { perspective } = usePerspective();
   const [initialPageLoad, , , setInitialPageLoadFalse] = useBoolean(true);
   const board = useSelector((state: MonitoringState) =>
@@ -110,7 +110,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
 
   return (
     <>
-      <ProjectBar />
+      <ProjectBar activeProject={activeProject} setActiveProject={setActiveProject} />
       <DashboardSkeleton urlBoard={urlBoard} boards={boards} boardItems={boardItems}>
         <Overview>
           {loading ? (
