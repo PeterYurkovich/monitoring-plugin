@@ -18,7 +18,6 @@ export const ProjectBarDropdowns: React.FC<ProjectBarDropdownsProps> = ({
     <div className="co-project-bar__items" data-test-id="project-bar-dropdown">
       <ProjectDropdown
         onSelect={(event, newProject) => {
-          console.log('setting new project: ', newProject);
           setActiveProject(newProject);
         }}
         selected={activeProject}

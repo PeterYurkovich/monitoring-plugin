@@ -115,13 +115,9 @@ const ProjectMenu: React.FC<{
 
   const [filterText, setFilterText] = React.useState('');
 
-  const { projectsLoading, projects } = usePerses();
+  const { projects } = usePerses();
 
   const optionItems = React.useMemo(() => {
-    if (projectsLoading) {
-      return [];
-    }
-
     const items = projects.map((item) => {
       const { name } = item.metadata;
       return { title: item?.spec?.display?.name ?? name, key: name };
@@ -134,7 +130,7 @@ const ProjectMenu: React.FC<{
 
     items.unshift({ title: legacyDashboardsTitle, key: LEGACY_DASHBOARDS_KEY });
     return items;
-  }, [legacyDashboardsTitle, projects, projectsLoading, selected]);
+  }, [legacyDashboardsTitle, projects, selected]);
 
   const isOptionShown = React.useCallback(
     (option) => {
@@ -199,6 +195,7 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
   const menuRef = React.useRef(null);
   const [isOpen, setOpen] = React.useState(false);
   const legacyDashboardsTitle = t('Legacy Dashboards');
+  const { projectsError, projectsLoading } = usePerses();
 
   const title = selected === LEGACY_DASHBOARDS_KEY ? legacyDashboardsTitle : selected;
 
@@ -208,8 +205,11 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
     selected,
     legacyDashboardsTitle,
     menuRef,
-    children: <></>,
   };
+
+  if (projectsLoading || projectsError) {
+    return null;
+  }
 
   return (
     <div className="co-project-dropdown">
