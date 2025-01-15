@@ -26,7 +26,7 @@ export const useActiveProject = () => {
     const projectFromUrl = queryParams.get('project');
     // If data and url hasn't been set yet, default to legacy dashboard (for now)
     if (!activeProject && !projectFromUrl) {
-      setActiveProject(LEGACY_DASHBOARDS_KEY);
+      // setActiveProject(LEGACY_DASHBOARDS_KEY);
       return;
       // If activeProject isn't set yet, but the url is, then load from url
     } else if (!activeProject && projectFromUrl) {

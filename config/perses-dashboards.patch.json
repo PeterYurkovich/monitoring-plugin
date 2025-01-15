@@ -6,7 +6,10 @@
       "type": "console.page/route",
       "properties": {
         "exact": false,
-        "path": ["/multicloud/monitoring/dashboards"],
+        "path": [
+          "/multicloud/monitoring/dashboards",
+          "/monitoring/perses-dashboards"
+        ],
         "component": {
           "$codeRef": "MonitoringUI"
         }
@@ -25,6 +28,24 @@
         "perspective": "acm",
         "section": "acm-observe",
         "insertAfter": "multicloud-alerting"
+      }
+    }
+  },
+  {
+    "op": "add",
+    "path": "/extensions/0",
+    "value": {
+      "type": "console.navigation/href",
+      "flags": {
+        "required": ["PROMETHEUS", "MONITORING", "CAN_GET_NS"]
+      },
+      "properties": {
+        "id": "perses-dashboards",
+        "name": "%plugin__monitoring-plugin~Perses Dashboards%",
+        "href": "/monitoring/perses-dashboards",
+        "perspective": "admin",
+        "section": "observe",
+        "insertAfter": "metrics"
       }
     }
   }

@@ -772,6 +772,11 @@ const MonitoringUI = () => {
         exact
         component={MonitoringDashboardsPage}
       />
+      <Route
+        path="/monitoring/perses-dashboards/:dashboardName?"
+        exact
+        component={MonitoringDashboardsPage}
+      />
       <Route path="/monitoring/graph" exact component={PrometheusUIRedirect} />
       <Route path="/monitoring/query-browser" exact component={QueryBrowserPage} />
       <Route path="/monitoring/silences/~new" exact component={CreateSilence} />

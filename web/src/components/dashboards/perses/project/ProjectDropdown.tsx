@@ -110,7 +110,7 @@ const ProjectMenu: React.FC<{
   selected?: string;
   legacyDashboardsTitle: string;
   menuRef: React.MutableRefObject<HTMLDivElement>;
-}> = ({ setOpen, onSelect, selected, legacyDashboardsTitle, menuRef }) => {
+}> = ({ setOpen, onSelect, selected, menuRef }) => {
   const filterRef = React.useRef(null);
 
   const [filterText, setFilterText] = React.useState('');
@@ -128,9 +128,9 @@ const ProjectMenu: React.FC<{
     }
     items.sort((a, b) => alphanumericCompare(a.title, b.title));
 
-    items.unshift({ title: legacyDashboardsTitle, key: LEGACY_DASHBOARDS_KEY });
+    // items.unshift({ title: legacyDashboardsTitle, key: LEGACY_DASHBOARDS_KEY });
     return items;
-  }, [legacyDashboardsTitle, persesProjects, selected]);
+  }, [persesProjects, selected]);
 
   const isOptionShown = React.useCallback(
     (option) => {
@@ -218,7 +218,7 @@ const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
     const selectedProject = persesProjects.find(
       (persesProject) => persesProject.metadata.name === selected,
     );
-    title = selectedProject.spec?.display?.name;
+    title = selectedProject?.spec?.display?.name;
   }
 
   return (

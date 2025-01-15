@@ -7,7 +7,7 @@ import { withFallback } from '../console/console-shared/error/error-boundary';
 import ErrorAlert from '../console/console-shared/alerts/error';
 import { LoadingInline } from '../console/utils/status-box';
 
-import { LegacyDashboard } from './legacy/legacy-dashboard';
+// import { LegacyDashboard } from './legacy/legacy-dashboard';
 import DashboardSkeleton from './shared/dashboard-skeleton';
 import { PersesBoard } from './perses/perses-dashboards';
 import { ProjectBar } from './perses/project/ProjectBar';
@@ -44,7 +44,6 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
     combinedIntialLoad,
     activeProject,
     setActiveProject,
-    legacyRows,
   } = useDashboardsData(namespace, urlBoard);
   // if namespace is active everything should short circuit and just use the legacy stuff
   const { perspective } = usePerspective();
@@ -67,7 +66,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
           ) : legacyDashboardsError ? (
             <ErrorAlert message={legacyDashboardsError} />
           ) : (
-            <LegacyDashboard key={dashboardName} rows={legacyRows} perspective={perspective} />
+            <NoPersesPage />
           )}
         </Overview>
       </DashboardSkeleton>
@@ -91,3 +90,7 @@ const MonitoringDashboardsPageWrapper: React.FC<MonitoringDashboardsWrapperProps
 const MonitoringDashboardsPage = withRouter(MonitoringDashboardsPageWrapper);
 
 export default withFallback(MonitoringDashboardsPage);
+
+const NoPersesPage = () => {
+  return <div>no perses sadge </div>;
+};

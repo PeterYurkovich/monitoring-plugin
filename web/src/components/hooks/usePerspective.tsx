@@ -285,7 +285,7 @@ export const getObserveState = (perspective: Perspective, state: MonitoringState
     case 'admin':
     case 'dev':
     default:
-      return state.plugins?.mp;
+      return state.plugins?.mcp;
   }
 };
 
@@ -330,7 +330,7 @@ export const getDashboardsUrl = (
     case 'virtualization-perspective':
       return `/monitoring/dashboards/${boardName}`;
     case 'admin':
-      return `/monitoring/dashboards/${boardName}`;
+      return `/monitoring/perses-dashboards/${boardName}`;
     case 'dev':
       return `/dev-monitoring/ns/${namespace}?dashboard=${boardName}`;
     case 'acm':

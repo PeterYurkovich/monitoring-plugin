@@ -21,6 +21,7 @@ export const DashboardDropdown: React.FC<DashboardDropdownProps> = ({
   selectedKey,
 }) => {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
+  console.debug('selected key', selectedKey);
 
   const allTags = _.flatMap(items, 'tags');
   const uniqueTags = _.uniq(allTags);

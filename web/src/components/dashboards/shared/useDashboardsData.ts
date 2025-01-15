@@ -89,6 +89,10 @@ export const useDashboardsData = (namespace: string, urlBoard: string) => {
     if (combinedIntialLoad) {
       return [];
     }
+    if (!activeProject) {
+      setActiveProject(persesProjects.at(0)?.metadata?.name);
+      return [];
+    }
     if (activeProject === LEGACY_DASHBOARDS_KEY) {
       return legacyDashboards.map((legacyDashboard) => {
         return {
@@ -108,11 +112,20 @@ export const useDashboardsData = (namespace: string, urlBoard: string) => {
           name: persesDashboard.metadata?.name,
           project: persesDashboard.metadata?.project,
           tags: ['perses'],
-          title: `${matchingProject.spec?.display?.name} / ${persesDashboard.spec.display.name}`,
+          title:
+            `${matchingProject?.spec?.display?.name} /` +
+            ` ${persesDashboard?.spec?.display?.name}`,
         };
       });
     }
-  }, [legacyDashboards, persesDashboards, persesProjects, activeProject, combinedIntialLoad]);
+  }, [
+    legacyDashboards,
+    persesDashboards,
+    persesProjects,
+    activeProject,
+    combinedIntialLoad,
+    setActiveProject,
+  ]);
 
   // Retrieve dashboard metadata for the currently selected project
   const activeProjectDashboardsMetadata = React.useMemo<CombinedDashboardMetadata[]>(() => {
@@ -192,6 +205,7 @@ export const useDashboardsData = (namespace: string, urlBoard: string) => {
     });
     if (!dashboardName) {
       const boardName = namespace ? getQueryArgument('dashboard') : urlBoard;
+      console.debug('boardName', boardName);
       if (
         boardName &&
         !_.isEmpty(legacyDashboards) &&
