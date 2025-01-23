@@ -13,6 +13,7 @@ import { LoadingInline } from '../../console/utils/status-box';
 import { formatNumber } from '../../format';
 import { usePerspective } from '../../hooks/usePerspective';
 import { Panel } from './types';
+import { useTranslation } from 'react-i18next';
 
 const colorMap = {
   'super-light-blue': 'blue-100',
@@ -78,6 +79,7 @@ const SingleStat: React.FC<Props> = ({
     valueMaps,
   } = panel;
 
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
   const [error, setError] = React.useState<string>();
   const [isLoading, setIsLoading] = React.useState(true);
   const [value, setValue] = React.useState<string>();
@@ -123,7 +125,7 @@ const SingleStat: React.FC<Props> = ({
     return <LoadingInline />;
   }
   if (error) {
-    return <ErrorAlert message={error} />;
+    return <ErrorAlert error={{ message: error, name: t('An error occurred') }} />;
   }
 
   let color;

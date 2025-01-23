@@ -15,6 +15,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LEGACY_DASHBOARDS_KEY } from './perses/project/utils';
 import { useDashboardsData } from './shared/useDashboardsData';
 import { usePerspective } from '../hooks/usePerspective';
+import { useTranslation } from 'react-i18next';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,7 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
   } = useDashboardsData(namespace, urlBoard);
   // if namespace is active everything should short circuit and just use the legacy stuff
   const { perspective } = usePerspective();
+  const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   return (
     <>
@@ -65,7 +67,9 @@ const MonitoringDashboardsPage_: React.FC<MonitoringDashboardsPageProps> = ({
           ) : persesAvailable && activeProject !== LEGACY_DASHBOARDS_KEY ? (
             <PersesBoard dashboardName={dashboardName} perspective={perspective} />
           ) : legacyDashboardsError ? (
-            <ErrorAlert message={legacyDashboardsError} />
+            <ErrorAlert
+              error={{ message: legacyDashboardsError, name: t('Error Loading Dashboards') }}
+            />
           ) : (
             <LegacyDashboard key={dashboardName} rows={legacyRows} perspective={perspective} />
           )}
