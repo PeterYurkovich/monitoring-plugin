@@ -34,7 +34,6 @@ import {
   Flex,
   FlexItem,
   PageSection,
-  PageSectionVariants,
   Alert as PFAlert,
 } from '@patternfly/react-core';
 import { useBoolean } from '../hooks/useBoolean';
@@ -158,7 +157,7 @@ const SilencesPage_: React.FC = () => {
   return (
     <>
       <Helmet>{perspective === 'dev' ? <title>Silences</title> : <title>Alerting</title>}</Helmet>
-      <PageSection variant={PageSectionVariants.light}>
+      <PageSection hasBodyWrapper={false} >
         <SelectedSilencesContext.Provider value={{ selectedSilences, setSelectedSilences }}>
           <Flex>
             <FlexItem>
