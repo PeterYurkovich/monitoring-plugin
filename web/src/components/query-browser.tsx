@@ -29,6 +29,8 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateVariant,
+  Flex,
+  FlexItem,
   InputGroup,
   InputGroupItem,
   Level,
@@ -41,7 +43,7 @@ import {
   Title,
   Tooltip,
 } from '@patternfly/react-core';
-import { ChartLineIcon } from '@patternfly/react-icons';
+import { AngleLeftIcon, AngleRightIcon, ChartLineIcon } from '@patternfly/react-icons';
 import classNames from 'classnames';
 import * as _ from 'lodash-es';
 import type { FC, Ref, ReactNode, KeyboardEvent, MouseEvent, ComponentType } from 'react';
@@ -91,8 +93,9 @@ import {
 import { getObserveState } from './hooks/usePerspective';
 import './query-browser.scss';
 import { GraphUnits } from './metrics/units';
-import { DataTestIDs } from './data-test';
+import { DataTestIDs, LegacyDashboardPageTestIDs } from './data-test';
 import { useMonitoring } from '../hooks/useMonitoring';
+import TablePagination from './table-pagination';
 
 const spans = ['5m', '15m', '30m', '1h', '2h', '6h', '12h', '1d', '2d', '1w', '2w'];
 export const colors = queryBrowserTheme.line.colorScale;
@@ -249,15 +252,18 @@ const Graph: FC<GraphProps> = memo(
     span,
     units,
     width,
+    isDatasetTooBig,
   }) => {
     const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
-    const data: GraphSeries[] = [];
+    const minMaxData: GraphSeries[] = [];
+    const indexedData: GraphSeries[] = [];
     const tooltipSeriesNames: string[] = [];
     const tooltipSeriesLabels: PrometheusLabels[] = [];
     const legendData: { name: string }[] = [];
 
     const [xDomain, setXDomain] = useState(fixedXDomain || getXDomain(Date.now(), span));
+    const [page, setPage] = useState(1);
 
     // Only update X-axis if the time range (fixedXDomain or span) or graph data (allSeries) change
     useEffect(() => {
@@ -266,24 +272,26 @@ const Graph: FC<GraphProps> = memo(
 
     const domain = { x: xDomain, y: undefined };
 
+    let seriesCount = 0;
     _.each(allSeries, (series, i) => {
       _.each(series, ([metric, values]) => {
+        seriesCount++;
         // Ignore any disabled series
-        data.push(_.some(disabledSeries?.[i], (s) => _.isEqual(s, metric)) ? null : values);
-        if (formatSeriesTitle) {
-          const name = formatSeriesTitle(metric, i);
-          legendData.push({ name });
-          tooltipSeriesNames.push(name);
-        } else {
-          tooltipSeriesLabels.push(metric);
+        minMaxData.push(_.some(disabledSeries?.[i], (s) => _.isEqual(s, metric)) ? null : values);
+        if (seriesCount > (page - 1) * 50 && seriesCount <= page * 50) {
+          indexedData.push(
+            _.some(disabledSeries?.[i], (s) => _.isEqual(s, metric)) ? null : values,
+          );
+          if (formatSeriesTitle) {
+            const name = formatSeriesTitle(metric, i);
+            legendData.push({ name });
+            tooltipSeriesNames.push(name);
+          } else {
+            tooltipSeriesLabels.push(metric);
+          }
         }
       });
     });
-
-    if (!data.some(Array.isArray)) {
-      return <GraphEmpty />;
-    }
-
     let yTickFormat = valueFormatter(units);
 
     if (isStack) {
@@ -298,8 +306,8 @@ const Graph: FC<GraphProps> = memo(
       // Set a reasonable Y-axis range based on the min and max values in the data
       const findMin = (series: GraphSeries): GraphDataPoint => _.minBy(series, 'y');
       const findMax = (series: GraphSeries): GraphDataPoint => _.maxBy(series, 'y');
-      let minY: number = findMin(data.map(findMin))?.y ?? 0;
-      let maxY: number = findMax(data.map(findMax))?.y ?? 0;
+      let minY: number = findMin(minMaxData.map(findMin))?.y ?? 0;
+      let maxY: number = findMax(minMaxData.map(findMax))?.y ?? 0;
       if (minY === 0 && maxY === 0) {
         minY = 0;
         maxY = 1;
@@ -314,6 +322,10 @@ const Graph: FC<GraphProps> = memo(
       if (Math.abs(maxY - minY) < 0.005) {
         yTickFormat = (v: number) => (v === 0 ? '0' : v.toExponential(1));
       }
+    }
+
+    if (!indexedData.some(Array.isArray)) {
+      return <GraphEmpty />;
     }
 
     const xAxisTickCount = Math.round(width / 100);
@@ -335,89 +347,117 @@ const Graph: FC<GraphProps> = memo(
     const hasLegend = showLegend && !_.isEmpty(legendData);
 
     return (
-      <Chart
-        containerComponent={
-          <ChartVoronoiContainer
-            activateData={false}
-            labelComponent={<QueryBrowserTooltip height={CHART_HEIGHT - BOTTOM_SERIES_HEIGHT} />}
-            labels={() => ' '}
-            mouseFollowTooltips={true}
-            voronoiDimension="x"
-            voronoiPadding={0}
-          />
-        }
-        ariaTitle={t('query browser chart')}
-        domain={domain}
-        domainPadding={{ y: 1 }}
-        height={hasLegend ? CHART_HEIGHT + LEGEND_HEIGHT : CHART_HEIGHT}
-        scale={{ x: 'time', y: 'linear' }}
-        theme={queryBrowserTheme}
-        width={width}
-        padding={{
-          bottom: hasLegend ? BOTTOM_SERIES_HEIGHT + LEGEND_HEIGHT : BOTTOM_SERIES_HEIGHT,
-          left: 65,
-          right: 15,
-          top: 5,
-        }}
-      >
-        <ChartAxis
-          tickCount={xAxisTickCount}
-          tickFormat={xAxisTickFormat}
-          style={{ tickLabels: { fontSize: 12 }, axisLabel: { fontSize: 12 } }}
-        />
-        <ChartAxis
-          crossAxis={false}
-          dependentAxis
-          tickComponent={nullComponent}
-          tickCount={6}
-          tickFormat={yTickFormat}
-          style={{ tickLabels: { fontSize: 12 }, axisLabel: { fontSize: 12 } }}
-        />
-        <GroupComponent>
-          {data.map((values, i) => {
-            if (values === null) {
-              return null;
-            }
-            const color = colors[i % colors.length];
-            const style = {
-              data: { [isStack ? 'fill' : 'stroke']: color },
-              labels: {
-                fill: color,
-                labels: tooltipSeriesLabels[i],
-                name: tooltipSeriesNames[i],
-                units,
-              },
-            };
-            return (
-              // We need to use the `name` prop to prevent an error in VictorySharedEvents when
-              // dynamically removing and then adding back data series
-              <ChartComponent
-                data={values}
-                groupComponent={<g />}
-                key={i}
-                name={`series-${i}`}
-                style={style}
-              />
-            );
-          })}
-        </GroupComponent>
-        {hasLegend && (
-          <ChartLegend
-            data={legendData}
-            groupComponent={<LegendContainer />}
-            gutter={30}
-            itemsPerRow={4}
-            orientation="vertical"
-            symbolSpacer={4}
-            style={{
-              labels: { fontSize: 12 },
-            }}
-            padding={{
-              top: BOTTOM_SERIES_HEIGHT,
-            }}
-          />
+      <Flex direction={{ default: 'column' }}>
+        {isDatasetTooBig && (
+          <FlexItem>
+            <Alert
+              variant="info"
+              title={t(
+                'The resulting dataset is too large to graph. Use the available buttons to view 50 series at a time',
+              )}
+            />
+          </FlexItem>
         )}
-      </Chart>
+        <FlexItem>
+          <Chart
+            containerComponent={
+              <ChartVoronoiContainer
+                activateData={false}
+                labelComponent={
+                  <QueryBrowserTooltip height={CHART_HEIGHT - BOTTOM_SERIES_HEIGHT} />
+                }
+                labels={() => ' '}
+                mouseFollowTooltips={true}
+                voronoiDimension="x"
+                voronoiPadding={0}
+              />
+            }
+            ariaTitle={t('query browser chart')}
+            domain={domain}
+            domainPadding={{ y: 1 }}
+            height={hasLegend ? CHART_HEIGHT + LEGEND_HEIGHT : CHART_HEIGHT}
+            scale={{ x: 'time', y: 'linear' }}
+            theme={queryBrowserTheme}
+            width={width}
+            padding={{
+              bottom: hasLegend ? BOTTOM_SERIES_HEIGHT + LEGEND_HEIGHT : BOTTOM_SERIES_HEIGHT,
+              left: 65,
+              right: 15,
+              top: 5,
+            }}
+          >
+            <ChartAxis
+              tickCount={xAxisTickCount}
+              tickFormat={xAxisTickFormat}
+              style={{ tickLabels: { fontSize: 12 }, axisLabel: { fontSize: 12 } }}
+            />
+            <ChartAxis
+              crossAxis={false}
+              dependentAxis
+              tickComponent={nullComponent}
+              tickCount={6}
+              tickFormat={yTickFormat}
+              style={{ tickLabels: { fontSize: 12 }, axisLabel: { fontSize: 12 } }}
+            />
+            <GroupComponent>
+              {indexedData.map((values, i) => {
+                if (values === null) {
+                  return null;
+                }
+                const color = colors[i % colors.length];
+                const style = {
+                  data: { [isStack ? 'fill' : 'stroke']: color },
+                  labels: {
+                    fill: color,
+                    labels: tooltipSeriesLabels[i],
+                    name: tooltipSeriesNames[i],
+                    units,
+                  },
+                };
+                return (
+                  // We need to use the `name` prop to prevent an error in VictorySharedEvents when
+                  // dynamically removing and then adding back data series
+                  <ChartComponent
+                    data={values}
+                    groupComponent={<g />}
+                    key={i}
+                    name={`series-${i}`}
+                    style={style}
+                  />
+                );
+              })}
+            </GroupComponent>
+            {hasLegend && (
+              <ChartLegend
+                data={legendData}
+                groupComponent={<LegendContainer />}
+                gutter={30}
+                itemsPerRow={4}
+                orientation="vertical"
+                symbolSpacer={4}
+                style={{
+                  labels: { fontSize: 12 },
+                }}
+                padding={{
+                  top: BOTTOM_SERIES_HEIGHT,
+                }}
+              />
+            )}
+          </Chart>
+        </FlexItem>
+        <Split onClick={() => {}}>
+          <SplitItem isFilled />
+          <SplitItem>
+            <TablePagination
+              itemCount={seriesCount}
+              page={page}
+              perPage={50}
+              setPage={setPage}
+              setPerPage={() => {}}
+            />
+          </SplitItem>
+        </Split>
+      </Flex>
     );
   },
 );
@@ -460,10 +500,10 @@ const formatSeriesValues = (
 };
 
 // Try to limit the graph to this number of data points
-const maxDataPointsSoft = 6000;
+const maxDataPointsSoft = 3000;
 
 // If we have more than this number of data points, do not render the graph
-const maxDataPointsHard = 10000;
+const maxDataPointsHard = 5000;
 
 // Min and max number of data samples per data series
 const minSamples = 10;
@@ -497,6 +537,7 @@ const ZoomableGraph: FC<ZoomableGraphProps> = ({
   span,
   units,
   width,
+  isDatasetTooBig,
 }) => {
   const [isZooming, setIsZooming] = useState(false);
   const [x1, setX1] = useState(0);
@@ -576,6 +617,7 @@ const ZoomableGraph: FC<ZoomableGraphProps> = ({
         span={span}
         units={units}
         width={width}
+        isDatasetTooBig={isDatasetTooBig}
       />
     </div>
   );
@@ -749,12 +791,11 @@ const QueryBrowser_: FC<QueryBrowserProps> = ({
       .then((responses: PrometheusResponse[]) => {
         const newResults = _.map(responses, 'data.result');
         const numDataPoints = _.sumBy(newResults, (r) => _.sumBy(r, 'values.length'));
-
         if (numDataPoints > maxDataPointsHard && samples === minSamples) {
           setIsDatasetTooBig(true);
-          return;
+        } else {
+          setIsDatasetTooBig(false);
         }
-        setIsDatasetTooBig(false);
 
         const newSamples = _.clamp(
           Math.floor((samples * maxDataPointsSoft) / numDataPoints),
@@ -909,14 +950,6 @@ const QueryBrowser_: FC<QueryBrowserProps> = ({
     );
   }
 
-  if (isDatasetTooBig) {
-    return (
-      <GraphEmptyState title={t('Ungraphable results')}>
-        {t('The resulting dataset is too large to graph.')}
-      </GraphEmptyState>
-    );
-  }
-
   const zoomableGraphOnZoom = (from: number, to: number) => {
     setGraphData(null);
     setXDomain([from, to]);
@@ -1028,6 +1061,7 @@ const QueryBrowser_: FC<QueryBrowserProps> = ({
                     span={span}
                     units={units}
                     width={width}
+                    isDatasetTooBig={isDatasetTooBig}
                   />
                 ) : (
                   <ZoomableGraph
@@ -1041,6 +1075,7 @@ const QueryBrowser_: FC<QueryBrowserProps> = ({
                     span={span}
                     units={units}
                     width={width}
+                    isDatasetTooBig={isDatasetTooBig}
                   />
                 )}
               </>
@@ -1084,6 +1119,7 @@ type GraphProps = {
   span: number;
   units: GraphUnits;
   width: number;
+  isDatasetTooBig?: boolean;
 };
 
 type GraphOnZoom = (from: number, to: number) => void;

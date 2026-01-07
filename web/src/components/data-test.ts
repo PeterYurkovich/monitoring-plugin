@@ -162,6 +162,8 @@ export const LegacyDashboardPageTestIDs = {
   DashboardDropdown: 'dashboard-dropdown', //div
   DashboardTimeRangeDropdownMenu: 'monitoring-time-range-dropdown', //div using get('#'+LegacyDashboardPageTestIDs.DashboardTimeRangeDropdownMenu)
   DashboardRefreshIntervalDropdownMenu: 'refresh-interval-dropdown', //div using get('#'+LegacyDashboardPageTestIDs.DashboardRefreshIntervalDropdownMenu)
+  DashboardDisplayIndexReduce: 'reduce-display-index',
+  DashboardDisplayIndexIncrease: 'increase-display-index',
   Graph: 'graph',
 };
 
