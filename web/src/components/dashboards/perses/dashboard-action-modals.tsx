@@ -72,7 +72,7 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
   const form = useForm<RenameDashboardValidationType>({
     resolver: zodResolver(renameDashboardDialogValidationSchema(t)),
     mode: 'onBlur',
-    defaultValues: { dashboardName: dashboard ? getResourceDisplayName(dashboard) : '' },
+    defaultValues: { dashboardName: '' },
   });
 
   const updateDashboardMutation = useUpdateDashboardMutation();
@@ -108,7 +108,7 @@ export const RenameActionModal = ({ dashboard, isOpen, onClose }: ActionModalPro
 
   const handleClose = () => {
     onClose();
-    form.reset();
+    form.reset({ dashboardName: '' });
   };
 
   return (
