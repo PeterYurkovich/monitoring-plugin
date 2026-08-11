@@ -16,7 +16,7 @@ const KBV = {
   },
 };
 
-describe('IVT: Monitoring UIPlugin + Virtualization', { tags: ['@smoke', '@coo'] }, () => {
+describe('IVT: Monitoring UIPlugin + Virtualization', { tags: ['@alerting'] }, () => {
   before(() => {
     cy.beforeBlockVirtualization(KBV);
   });

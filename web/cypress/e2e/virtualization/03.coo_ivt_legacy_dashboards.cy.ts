@@ -64,7 +64,7 @@ describe(
 
 describe(
   'Regression: Monitoring - Legacy Dashboards (Virtualization)',
-  { tags: ['@virtualization', '@slow'] },
+  { tags: ['@legacy-dashboards', '@slow'] },
   () => {
     beforeEach(() => {
       cy.visit('/');
@@ -84,7 +84,7 @@ describe(
 
 describe(
   'Regression: Monitoring - Legacy Dashboards Namespaced (Virtualization)',
-  { tags: ['@virtualization', '@slow'] },
+  { tags: ['@legacy-dashboards', '@slow'] },
   () => {
     beforeEach(() => {
       cy.visit('/');

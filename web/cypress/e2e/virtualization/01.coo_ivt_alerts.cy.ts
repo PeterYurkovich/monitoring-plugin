@@ -33,39 +33,31 @@ const KBV = {
   },
 };
 
-describe(
-  'Installation: COO and setting up Monitoring Plugin',
-  { tags: ['@virtualization', '@slow'] },
-  () => {
-    before(() => {
-      cy.beforeBlockCOO(MCP, MP);
-    });
+describe('Installation: COO and setting up Monitoring Plugin', { tags: ['@alerting'] }, () => {
+  before(() => {
+    cy.beforeBlockCOO(MCP, MP);
+  });
 
-    it('1. Installation: COO and setting up Monitoring Plugin', () => {
-      cy.log('Installation: COO and setting up Monitoring Plugin');
-    });
-  },
-);
+  it('1. Installation: COO and setting up Monitoring Plugin', () => {
+    cy.log('Installation: COO and setting up Monitoring Plugin');
+  });
+});
 
-describe(
-  'IVT: Monitoring UIPlugin + Virtualization',
-  { tags: ['@virtualization', '@slow'] },
-  () => {
-    before(() => {
-      cy.beforeBlockVirtualization(KBV);
-    });
+describe('IVT: Monitoring UIPlugin + Virtualization', { tags: ['@alerting'] }, () => {
+  before(() => {
+    cy.beforeBlockVirtualization(KBV);
+  });
 
-    it('1. Virtualization perspective - Observe Menu', () => {
-      cy.log('Virtualization perspective - Observe Menu and verify all submenus');
-      cy.switchPerspective('Virtualization', 'Fleet virtualization');
-      guidedTour.closeKubevirtTour();
-    });
-  },
-);
+  it('1. Virtualization perspective - Observe Menu', () => {
+    cy.log('Virtualization perspective - Observe Menu and verify all submenus');
+    cy.switchPerspective('Virtualization', 'Fleet virtualization');
+    guidedTour.closeKubevirtTour();
+  });
+});
 
 describe(
   'Regression: Monitoring - Alerts (Virtualization)',
-  { tags: ['@virtualization', '@slow'] },
+  { tags: ['@alerting', '@slow'] },
   () => {
     beforeEach(() => {
       cy.visit('/');

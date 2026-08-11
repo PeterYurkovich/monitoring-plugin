@@ -65,7 +65,7 @@ describe(
 
 describe(
   'Regression: Monitoring - Metrics (Virtualization)',
-  { tags: ['@virtualization', '@slow'] },
+  { tags: ['@metrics', '@slow'] },
   () => {
     beforeEach(() => {
       cy.visit('/');
@@ -87,7 +87,7 @@ describe(
 
 describe(
   'Regression: Monitoring - Metrics Namespaced (Virtualization)',
-  { tags: ['@virtualization', '@slow'] },
+  { tags: ['@metrics', '@slow'] },
   () => {
     beforeEach(() => {
       cy.visit('/');

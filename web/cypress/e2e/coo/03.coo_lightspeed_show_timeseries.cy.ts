@@ -36,7 +36,7 @@ const SEL = {
  * Prerequisites: COO and OLS operators must be pre-installed.
  * Only authentication is needed — operator lifecycle is not managed here.
  */
-describe('COO-LightSpeed: show_timeseries', { tags: ['@ols'] }, () => {
+describe('COO-LightSpeed: show_timeseries', { tags: ['@perses-dashboards'] }, () => {
   before(() => {
     operatorAuthUtils.loginAndAuth();
     cy.visit('/');
@@ -58,7 +58,9 @@ describe('COO-LightSpeed: show_timeseries', { tags: ['@ols'] }, () => {
     ).then(() => {
       // Fallback: delete any dashboard whose CR name matches the display name pattern
       cy.exec(
-        `oc get persesdashboard -n ${DASHBOARD_PROJECT} -o name --kubeconfig ${Cypress.env('KUBECONFIG_PATH')}`,
+        `oc get persesdashboard -n ${DASHBOARD_PROJECT} -o name --kubeconfig ${Cypress.env(
+          'KUBECONFIG_PATH',
+        )}`,
         { failOnNonZeroExit: false },
       ).then((result) => {
         if (result.stdout) {

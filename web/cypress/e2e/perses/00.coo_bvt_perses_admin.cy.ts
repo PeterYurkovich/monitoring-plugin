@@ -21,7 +21,7 @@ const MP = {
 //TODO: change tag to @smoke, @dashboards, @perses when customizable-dashboards gets merged
 describe(
   'BVT: COO - Dashboards (Perses) - Core platform perspective',
-  { tags: ['@smoke', '@dashboards', '@perses'] },
+  { tags: ['@perses-dashboards'] },
   () => {
     before(() => {
       cy.beforeBlockCOO(MCP, MP, { dashboards: true, troubleshootingPanel: false });

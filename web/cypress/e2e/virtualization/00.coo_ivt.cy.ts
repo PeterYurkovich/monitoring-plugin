@@ -59,7 +59,7 @@ describe('Installation: Virtualization', { tags: ['@virtualization', '@slow'] },
   });
 });
 
-describe('IVT: Monitoring + Virtualization', { tags: ['@smoke', '@virtualization'] }, () => {
+describe('IVT: Monitoring + Virtualization', { tags: ['@metrics', '@alerting'] }, () => {
   beforeEach(() => {
     cy.visit('/');
     guidedTour.close();

@@ -21,7 +21,7 @@ import { operatorAuthUtils } from '../../support/commands/auth-commands';
 //TODO: change tag to @smoke, @dashboards, @perses when customizable-dashboards gets merged
 describe(
   'RBAC User5: COO - Dashboards (Perses) - Administrator perspective',
-  { tags: ['@perses-dev'] },
+  { tags: ['@perses-dashboards'] },
   () => {
     before(() => {
       //TODO: https://issues.redhat.com/browse/OCPBUGS-58468 - when it gets fixed, installation can be don using non-admin user
