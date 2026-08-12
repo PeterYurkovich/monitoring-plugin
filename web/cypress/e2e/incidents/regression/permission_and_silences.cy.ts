@@ -13,26 +13,19 @@ Tests:
 Verifies: OU-1020, OU-706, OU-1213
 */
 
-import { CLUSTER_MONITORING_OPERATOR } from '../../../support/operators';
+import {
+  CLUSTER_MONITORING_OPERATOR,
+  CLUSTER_OBSERVABILITY_OPERATOR,
+} from '../../../support/operators';
 import { incidentsPage } from '../../../views/incidents-page';
 import { nav } from '../../../views/nav';
-
-const MCP = {
-  namespace: Cypress.env('COO_NAMESPACE'),
-  packageName: 'cluster-observability-operator',
-  operatorName: 'Cluster Observability Operator',
-  config: {
-    kind: 'UIPlugin',
-    name: 'monitoring',
-  },
-};
 
 describe(
   'Regression: Silences Not Applied Correctly',
   { tags: ['@cluster-health-analyzer'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO(MCP, CLUSTER_MONITORING_OPERATOR, {
+      cy.beforeBlockCOO(CLUSTER_OBSERVABILITY_OPERATOR, CLUSTER_MONITORING_OPERATOR, {
         dashboards: false,
         troubleshootingPanel: false,
       });
@@ -142,7 +135,7 @@ describe(
 
 describe('Regression: Permission Denied Handling', { tags: ['@cluster-health-analyzer'] }, () => {
   before(() => {
-    cy.beforeBlockCOO(MCP, CLUSTER_MONITORING_OPERATOR, {
+    cy.beforeBlockCOO(CLUSTER_OBSERVABILITY_OPERATOR, CLUSTER_MONITORING_OPERATOR, {
       dashboards: false,
       troubleshootingPanel: false,
     });
