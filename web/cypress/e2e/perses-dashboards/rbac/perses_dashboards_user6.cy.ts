@@ -13,11 +13,6 @@ import { operatorAuthUtils } from '../../../support/commands/auth-commands';
 //   },
 // };
 
-// const MP = {
-//   namespace: 'openshift-monitoring',
-//   operatorName: 'Cluster Monitoring Operator',
-// };
-
 //TODO: change tag to @smoke, @dashboards, @perses when customizable-dashboards gets merged
 describe(
   'RBAC User6: COO - Dashboards (Perses) - Administrator perspective',
@@ -32,8 +27,8 @@ describe(
       // );
 
       // Step 2: Setup COO and Perses dashboards (requires admin privileges)
-      // cy.beforeBlockCOO(MCP, MP, { dashboards: true, troubleshootingPanel: false });
       operatorAuthUtils.loginAndAuth();
+      cy.switchPerspective('Core platform');
       cy.cleanupPersesTestDashboardsBeforeTests();
       cy.setupPersesRBACandExtraDashboards();
 
