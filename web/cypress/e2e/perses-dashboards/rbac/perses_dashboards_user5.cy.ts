@@ -1,6 +1,6 @@
-import { nav } from '../../views/nav';
-import { runCOORBACPersesTestsDevUser6 } from '../../support/perses/99.coo_rbac_perses_user6.cy';
-import { operatorAuthUtils } from '../../support/commands/auth-commands';
+import { nav } from '../../../views/nav';
+import { runCOORBACPersesTestsDevUser5 } from '../../../support/perses/99.coo_rbac_perses_user5.cy';
+import { operatorAuthUtils } from '../../../support/commands/auth-commands';
 
 // Set constants for the operators that need to be installed for tests.
 // const MCP = {
@@ -20,7 +20,7 @@ import { operatorAuthUtils } from '../../support/commands/auth-commands';
 
 //TODO: change tag to @smoke, @dashboards, @perses when customizable-dashboards gets merged
 describe(
-  'RBAC User6: COO - Dashboards (Perses) - Administrator perspective',
+  'RBAC User5: COO - Dashboards (Perses) - Administrator perspective',
   { tags: ['@perses-dashboards'] },
   () => {
     before(() => {
@@ -34,6 +34,7 @@ describe(
       // Step 2: Setup COO and Perses dashboards (requires admin privileges)
       // cy.beforeBlockCOO(MCP, MP, { dashboards: true, troubleshootingPanel: false });
       operatorAuthUtils.loginAndAuth();
+      cy.switchPerspective('Core platform');
       cy.cleanupPersesTestDashboardsBeforeTests();
       cy.setupPersesRBACandExtraDashboards();
 
@@ -62,8 +63,8 @@ describe(
       cy.log('Re-logging in as dev user with limited permissions');
       cy.relogin(
         Cypress.env('LOGIN_IDP_DEV_USER'),
-        Cypress.env('LOGIN_USERNAME6'),
-        Cypress.env('LOGIN_PASSWORD6'),
+        Cypress.env('LOGIN_USERNAME5'),
+        Cypress.env('LOGIN_PASSWORD5'),
       );
       cy.validateLogin();
       cy.closeOnboardingModalIfPresent();
@@ -74,6 +75,8 @@ describe(
       nav.sidenav.clickNavLink(['Observe', 'Dashboards']);
       cy.wait(2000);
       nav.sidenav.clickNavLink(['Observe', 'Dashboards (Perses)']);
+      cy.wait(2000);
+      cy.changeNamespace('All Projects');
     });
 
     after(() => {
@@ -81,7 +84,7 @@ describe(
     });
 
     //TODO: rename after customizable-dashboards gets merged
-    runCOORBACPersesTestsDevUser6({
+    runCOORBACPersesTestsDevUser5({
       name: 'Core platform',
     });
   },

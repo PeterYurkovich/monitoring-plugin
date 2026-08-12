@@ -18,7 +18,6 @@ const MP = {
   operatorName: 'Cluster Monitoring Operator',
 };
 
-//TODO: change tag to @smoke, @dashboards, @perses when customizable-dashboards gets merged
 describe(
   'BVT: COO - Dashboards (Perses) - Core platform perspective',
   { tags: ['@perses-dashboards'] },
