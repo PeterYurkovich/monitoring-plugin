@@ -30,7 +30,7 @@ describe('Regression: Redux State Management', { tags: ['@cluster-health-analyze
 
   beforeEach(() => {
     cy.log('Setting up comprehensive filtering test scenarios');
-    cy.mockIncidentFixture('incident-scenarios/7-comprehensive-filtering-test-scenarios.yaml');
+    cy.mockIncidentFixture('incidents/scenarios/7-comprehensive-filtering-test-scenarios.yaml');
   });
 
   it('1. Fresh load should display all 12 incidents without days filter manipulation', () => {

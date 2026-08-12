@@ -100,7 +100,7 @@ describe('Regression: Charts UI - Comprehensive', { tags: ['@cluster-health-anal
   });
 
   beforeEach(() => {
-    cy.mockIncidentFixture('incident-scenarios/12-charts-ui-comprehensive.yaml');
+    cy.mockIncidentFixture('incidents/scenarios/12-charts-ui-comprehensive.yaml');
   });
 
   describe('Section 2.1: Tooltip Positioning', () => {
