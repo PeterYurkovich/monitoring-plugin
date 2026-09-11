@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      exclude:
+        - "*"
+    groups:
+      all-go-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/web/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      semver-patch-days: 7
+    groups:
+      all-npm-dependencies:
+        patterns:
+          - "*"
+    allow:
+      - dependency-type: "all"
+        update-types:
+          - "version-update:semver-patch"
