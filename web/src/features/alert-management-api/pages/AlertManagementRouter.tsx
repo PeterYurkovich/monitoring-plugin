@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
 import { AlertManagementLayout } from '@/features/alert-management-api/components/AlertManagementLayout';
@@ -39,13 +39,11 @@ export function AlertManagementProvider({
 
 function AlertManagementRouter() {
   const { pathname } = useLocation();
-  const [lastRefreshedAt, setLastRefreshedAt] = useState(0);
-  const isAlertsPage = pathname === alertsPath;
 
   let children: ReactNode;
   switch (pathname) {
     case alertsPath:
-      children = <AlertManagementAlertsPage onLastRefreshedAtChange={setLastRefreshedAt} />;
+      children = <AlertManagementAlertsPage />;
       break;
     case alertRulesPath:
       children = <AlertRulesManagementPage />;
@@ -60,11 +58,7 @@ function AlertManagementRouter() {
       children = <Navigate to={alertsPath} replace />;
   }
 
-  return (
-    <AlertManagementLayout lastRefreshedAt={isAlertsPage ? lastRefreshedAt : 0}>
-      {children}
-    </AlertManagementLayout>
-  );
+  return <AlertManagementLayout>{children}</AlertManagementLayout>;
 }
 
 export function MpCmoAlertManagementRouter() {
