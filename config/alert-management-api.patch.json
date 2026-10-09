@@ -26,9 +26,9 @@
       "type": "console.page/route",
       "properties": {
         "exact": false,
-        "path": "/monitoring/v2/alerts",
+        "path": "/monitoring/v2",
         "component": {
-          "$codeRef": "AlertManagementPage.MpCmoAlertManagementPage"
+          "$codeRef": "AlertManagementRouter.MpCmoAlertManagementRouter"
         }
       }
     }
