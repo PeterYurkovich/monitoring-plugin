@@ -34,7 +34,7 @@ start,end,alertname,namespace,severity,silenced,labels
 
 ### 3.1 Short Incidents Not Visible
 **BUG**: Incidents with duration < 5 minutes weren't showing up.  
-**Automation Status**: AUTOMATED in `02.reg_ui_charts_comprehensive.cy.ts` (Section 3.1)
+**Automation Status**: AUTOMATED in `reg_ui_charts_comprehensive.cy.ts` (Section 3.1)
 - Uses fixture: `incident-scenarios/12-charts-ui-comprehensive.yaml` (includes very short duration incidents)
 - Tests: 5-minute, 9-minute, and recently resolved (2 min ago) incidents
 - Verifies: Bar visibility, dimensions, transparency, selectability, and alert loading
@@ -50,7 +50,7 @@ start,end,alertname,namespace,severity,silenced,labels
 
 ### 3.2 Silences Not Applied Correctly
 **BUG**: Silences were being matched by name only, not by name + namespace + severity.  
-**Automation Status**: AUTOMATED in `03.reg_api_calls.cy.ts`
+**Automation Status**: AUTOMATED in `reg_api_calls.cy.ts`
 - Uses fixture: `incident-scenarios/9-silenced-alerts-mixed-scenario.yaml`
 - Verifies: Opacity (0.3 for silenced, 1.0 for non-silenced)
 - Verifies: Tooltip "(silenced)" indicator
@@ -116,7 +116,7 @@ Use the simulation script from the `cluster-health-analyzer` repository (`local/
 
 ### 3.6 Permission Denied Handling (OU-1213)
 **BUG**: Page should gracefully handle 403 Forbidden responses from API endpoints.
-**Automation Status**: AUTOMATED in `03.reg_api_calls.cy.ts`
+**Automation Status**: AUTOMATED in `reg_api_calls.cy.ts`
 - Uses mock: `cy.mockPermissionDenied({ rules: true, silences: true, prometheus: true })`
 - Manual replication: Apply resources from [`docs/incident_detection/resources/`](../resources/)
 

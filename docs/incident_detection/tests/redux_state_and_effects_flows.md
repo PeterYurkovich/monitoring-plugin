@@ -8,16 +8,16 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
 ### 4.1 Basic Element Rendering
 **Automation Status**: AUTOMATED
-- Covered by `01.incidents.cy.ts` (tests 2, 3) and `04.reg_redux_effects.cy.ts` (test 3)
+- Covered by `incidents.cy.ts` (tests 2, 3) and `reg_redux_effects.cy.ts` (test 3)
 - Tests days filter changes and severity filter updates
 - Verifies chart updates immediately without page reload
 
-- [x] **Incidents Refresh on Days Change**: AUTOMATED in `01.incidents.cy.ts` test 2
+- [x] **Incidents Refresh on Days Change**: AUTOMATED in `incidents.cy.ts` test 2
   - Start with "Last 7 days" (showing all 10 incidents A-J)
   - Change to "Last 1 day" (should show only recent incidents)
   - Verify incidents chart updates, loading spinner shows, new data displayed
   
-- [x] **Filtered Data Updates on Filter Change**: AUTOMATED in `01.incidents.cy.ts` test 3 and `04.reg_redux_effects.cy.ts` test 3
+- [x] **Filtered Data Updates on Filter Change**: AUTOMATED in `incidents.cy.ts` test 3 and `reg_redux_effects.cy.ts` test 3
   - Apply "Critical" filter → verify only D, E, H shown
   - Add "Warning" filter → verify B, F, G, I, J also appear
   - Verify chart updates immediately (no page reload)
@@ -25,16 +25,16 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 ### 4.2 Selected Incident Does Not Survive State Changes
 **BUG**: Selected incident was being lost when changing filters or toggling graphs.  
 **Automation Status**: PARTIALLY AUTOMATED (filter changes covered, graph toggle not covered)
-- Covered by `04.reg_redux_effects.cy.ts` test 3
+- Covered by `reg_redux_effects.cy.ts` test 3
 - Tests incident ID filter persistence when non-matching severity filter applied
 - Graph toggle test not automated
 
-- [x] **Selection Survives Severity Filter**: AUTOMATED in `04.reg_redux_effects.cy.ts` test 3
+- [x] **Selection Survives Severity Filter**: AUTOMATED in `reg_redux_effects.cy.ts` test 3
   - Select Incident D (has Info, Warning, Critical in history)
   - Apply "Warning" filter (D matches because it had Warning)
   - Verify: Incident D still selected, URL has `?groupId=D`, alerts still shown
   
-- [x] **Selection Lost When Filtered Out (but ID filter persists)**: AUTOMATED in `04.reg_redux_effects.cy.ts` test 3
+- [x] **Selection Lost When Filtered Out (but ID filter persists)**: AUTOMATED in `reg_redux_effects.cy.ts` test 3
   - Select Incident A (Info only)
   - Apply "Critical" filter (A doesn't match)
   - Verify: Incident A disappears, but Incident ID filter chip remains, appropriate state
@@ -47,7 +47,7 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
 ### 4.3 Stale Alerts Displayed on Incident Reselection
 **BUG**: When switching between incidents, stale alerts from previous incident shown briefly.  
-**Automation Status**: INDIRECTLY COVERED by `01.incidents.cy.ts` (test 5: Traverse Incident Table)
+**Automation Status**: INDIRECTLY COVERED by `incidents.cy.ts` (test 5: Traverse Incident Table)
 - The `findIncidentWithAlert` method would fail if stale alerts from previous selections are displayed
 - Not explicitly tested with dedicated assertions, but functionality breaks if bug exists
 
@@ -66,7 +66,7 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
 ### 4.4 Incident Dropdown Staying Open After Page Refresh
 **BUG**: Dropdowns remained open after page refresh (Incidents Display / not F5).  
-**Automation Status**: AUTOMATED in `04.reg_redux_effects.cy.ts` (Test 2: Dropdown closure on deselection)
+**Automation Status**: AUTOMATED in `reg_redux_effects.cy.ts` (Test 2: Dropdown closure on deselection)
 
 - [ ] **Dropdown State After Refresh**: 
   - Select a particular Incident
@@ -78,7 +78,7 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
   ### 4.5 Dropdown Staying open after deselection
   **BUG**: Deselection of incident causes reposition of the dropdown  
-  **Automation Status**: AUTOMATED in `04.reg_redux_effects.cy.ts` (Test 2: Dropdown closure on deselection)
+  **Automation Status**: AUTOMATED in `reg_redux_effects.cy.ts` (Test 2: Dropdown closure on deselection)
   - Select a particular incident
   - Open the left dropdown menu (Severity, State, ID)
   - Deselect the incident by clicking on the bar, the site data should reload
@@ -93,7 +93,7 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
 ### 4.5 Adding filter when incident selected does not remove the incident filter
 **BUG:** When incident-id was filtered and additional filter (severity) applied, then if the filter was not matching the selected issue, the id filter was removed.  
-**Automation Status**: AUTOMATED in `04.reg_redux_effects.cy.ts` (Test 3: Filter state preservation)
+**Automation Status**: AUTOMATED in `reg_redux_effects.cy.ts` (Test 3: Filter state preservation)
 - [ ] Select a "critical" incident by id
 - [ ] Apply waring filter.
 - [ ] Verify incident is filtered out
@@ -101,7 +101,7 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
 
 ### 4.6 Incidents Not Loaded Initially
 **BUG**: Old Redux state was being used for effects fired at the beginning of page load. When the page loaded, only several issues were displayed.  
-**Automation Status**: AUTOMATED in `04.reg_redux_effects.cy.ts` (Test 1: Fresh load verification)
+**Automation Status**: AUTOMATED in `reg_redux_effects.cy.ts` (Test 1: Fresh load verification)
 
 **NOTE:** Hard to replicate, requires fresh browser instance
 
@@ -116,5 +116,4 @@ Use the complete set of incidents (A-J). These tests focus on how the UI respond
   - Refresh the days filter.
   - Verify that the end time in the query to prometheus is updated to the current time value.
   - Verify
-
 

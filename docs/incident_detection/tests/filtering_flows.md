@@ -1,6 +1,6 @@
 ## 1. CRITICAL: Filtering Bugs
 
-**Automation Status**: AUTOMATED in `01.reg_filtering.cy.ts` 
+**Automation Status**: AUTOMATED in `reg_filtering.cy.ts` 
 
 ### Prerequisites: Test Data Setup for Filtering Tests
 

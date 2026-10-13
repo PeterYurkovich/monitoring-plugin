@@ -1,6 +1,6 @@
 ## 2. CRITICAL: Charts – UI Bugs
 
-**Automation Status**: AUTOMATED in `02.reg_ui_charts_comprehensive.cy.ts` apart from 2.3.1 and 2.4
+**Automation Status**: AUTOMATED in `reg_ui_charts_comprehensive.cy.ts` apart from 2.3.1 and 2.4
 - Uses fixture: `incident-scenarios/12-charts-ui-comprehensive.yaml`
 - Covers: Tooltip positioning, bar sorting & visibility, date/time display
 - Verifies: Incidents chart, alerts chart, multi-component tooltips, long alert names

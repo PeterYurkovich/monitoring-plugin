@@ -2,7 +2,7 @@
 
 Shelved due to Cypress DOM snapshot accumulation causing ~10x degradation over 100 cycles regardless of application performance. See [overview.md](./overview.md) for details.
 
-**To re-enable:** save the code block below as `web/cypress/e2e/incidents/performance/03.performance_endurance.cy.ts`.
+**To re-enable:** save the code block below as `web/cypress/e2e/incidents/performance/performance_endurance.cy.ts`.
 
 ```typescript
 import { incidentsPage } from "../../../views/incidents-page";
@@ -25,7 +25,7 @@ describe(
   { tags: ["@cluster-health-analyzer", "@coo"] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
