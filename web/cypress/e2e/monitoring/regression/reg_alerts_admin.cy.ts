@@ -2,7 +2,7 @@ import { alerts } from '../../../fixtures/monitoring/alert';
 import {
   testAlertsCorePlatformHeaderRegression,
   testAlertsRegression,
-} from '../../../support/monitoring/01.reg_alerts.cy';
+} from '../../../support/monitoring/reg_alerts.cy';
 import { commonPages } from '../../../views/common';
 import { nav } from '../../../views/nav';
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
@@ -13,11 +13,12 @@ describe(
   { tags: ['@alerting', '@metrics'] },
   () => {
     before(() => {
-      cy.beforeBlock();
-      cy.switchPerspective('Core platform');
+      cy.ensureMonitoringPlugin();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
+      cy.switchPerspective('Core platform');
       alerts.interceptWatchdogAlert();
       nav.sidenav.clickNavLink(['Observe', 'Metrics']);
       commonPages.titleShouldHaveText('Metrics');

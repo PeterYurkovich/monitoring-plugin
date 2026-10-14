@@ -1,7 +1,7 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { CLUSTER_MONITORING_OPERATOR } from '../../support/operators';
-import { testLegacyDashboardsRegression } from '../../support/monitoring/03.reg_legacy_dashboards.cy';
-import { testLegacyDashboardsRegressionNamespace } from '../../support/monitoring/06.reg_legacy_dashboards_namespace.cy';
+import { testLegacyDashboardsRegression } from '../../support/monitoring/reg_legacy_dashboards.cy';
+import { testLegacyDashboardsRegressionNamespace } from '../../support/monitoring/reg_legacy_dashboards_namespace.cy';
 import { commonPages } from '../../views/common';
 import { nav } from '../../views/nav';
 import { guidedTour } from '../../views/tour';
@@ -11,7 +11,7 @@ describe(
   { tags: ['@legacy-dashboards', '@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO();
+      cy.ensureMonitoringConsolePlugin();
       cy.log('Installation: COO and setting up Monitoring Plugin');
     });
   },
@@ -22,7 +22,11 @@ describe(
   { tags: ['@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockVirtualization();
+      cy.ensureVirtualization();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Virtualization perspective - Observe Menu', () => {
@@ -38,6 +42,7 @@ describe(
   { tags: ['@legacy-dashboards', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       cy.validateLogin();
       cy.switchPerspective('Virtualization', 'Fleet virtualization');
@@ -56,6 +61,7 @@ describe(
   { tags: ['@legacy-dashboards', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       cy.validateLogin();
       cy.switchPerspective('Virtualization', 'Fleet virtualization');

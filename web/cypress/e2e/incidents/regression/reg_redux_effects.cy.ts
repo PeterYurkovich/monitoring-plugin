@@ -20,7 +20,7 @@ describe(
   { tags: ['@cluster-health-analyzer', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
@@ -28,6 +28,7 @@ describe(
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       cy.log('Setting up comprehensive filtering test scenarios');
       cy.mockIncidentFixture('incident-scenarios/7-comprehensive-filtering-test-scenarios.yaml');
     });

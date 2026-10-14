@@ -26,7 +26,7 @@ describe(
     let currentAlertName: string;
 
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
@@ -41,6 +41,10 @@ describe(
         currentAlertName = alertName;
         cy.log(`Test will monitor alert: ${currentAlertName}`);
       });
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Section 3.3 - Alert not incorrectly marked as resolved after time passes', () => {

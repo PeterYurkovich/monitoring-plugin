@@ -91,7 +91,7 @@ describe(
   { tags: ['@cluster-health-analyzer', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
@@ -99,6 +99,7 @@ describe(
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       cy.mockIncidentFixture('incident-scenarios/12-charts-ui-comprehensive.yaml');
     });
 

@@ -11,13 +11,14 @@ import { incidentsPage } from '../../views/incidents-page';
 
 describe('Incidents - Mocking Examples', { tags: ['@cluster-health-analyzer', '@coo'] }, () => {
   before(() => {
-    cy.beforeBlockCOO({
+    cy.ensureMonitoringConsolePlugin({
       dashboards: false,
       troubleshootingPanel: false,
     });
   });
 
   beforeEach(() => {
+    cy.restoreLogin();
     cy.log('Navigate to Observe → Incidents');
     incidentsPage.goTo();
   });

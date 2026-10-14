@@ -1,16 +1,17 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { nav } from '../../views/nav';
 import { alerts } from '../../fixtures/monitoring/alert';
-import { testBVTMonitoringTestsNamespace } from '../../support/monitoring/00.bvt_monitoring_namespace.cy';
+import { testBVTMonitoringTestsNamespace } from '../../support/monitoring/bvt_monitoring_namespace.cy';
 import { commonPages } from '../../views/common';
 import { CLUSTER_MONITORING_OPERATOR } from '../../support/operators';
 
 describe('BVT: Monitoring - Namespaced', { tags: ['@alerting'] }, () => {
   before(() => {
-    cy.beforeBlock();
+    cy.ensureMonitoringPlugin();
   });
 
   beforeEach(() => {
+    cy.restoreLogin();
     alerts.interceptWatchdogAlert();
     nav.sidenav.clickNavLink(['Observe', 'Alerting']);
     commonPages.titleShouldHaveText('Alerting');

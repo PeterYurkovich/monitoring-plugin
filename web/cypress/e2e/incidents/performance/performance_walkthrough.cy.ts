@@ -2,7 +2,7 @@
 Performance walkthrough: measures rendering cost of interactive operations
 (filter toggling, time range switching, table row expansion) under load.
 
-Unlike 01.performance_benchmark which measures initial chart render time,
+Unlike performance_benchmark which measures initial chart render time,
 this test measures incremental re-render cost during a realistic user session.
 
 Verifies: OBSINTA-1006
@@ -19,17 +19,21 @@ const THRESHOLDS = {
   TABLE_EXPAND_500: 20_000,
 };
 
-const collector = new BenchmarkCollector('02.performance_walkthrough.cy.ts');
+const collector = new BenchmarkCollector('performance_walkthrough.cy.ts');
 
 describe(
   'Performance: Interactive Walkthrough',
   { tags: ['@cluster-health-analyzer', '@coo'], numTestsKeptInMemory: 0 },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     afterEach(() => {

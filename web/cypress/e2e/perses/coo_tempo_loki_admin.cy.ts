@@ -1,5 +1,5 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
-import { testCOOCreateImportPerses } from '../../support/perses/05.coo_create_import_perses_admin.cy';
+import { testCOOCreateImportPerses } from '../../support/perses/coo_create_import_perses_admin.cy';
 import { nav } from '../../views/nav';
 
 describe(
@@ -7,20 +7,20 @@ describe(
   { tags: ['@perses-dashboards', '@coo', '@xfail'] },
   () => {
     before(() => {
-      cy.beforeBlockTempo();
-      cy.beforeBlockOtel();
+      cy.ensureTempo();
+      cy.ensureOtel();
       cy.configureBase();
       cy.configureTracingApps();
 
-      cy.beforeBlockLoki();
-      cy.beforeBlockLogging();
+      cy.ensureLoki();
+      cy.ensureLogging();
       cy.configureLoggingLoki();
 
       cy.cleanupDistributeTracingUIPlugin();
       cy.cleanupLoggingUIPlugin();
       cy.cleanupExtraDashboards();
 
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: true,
         troubleshootingPanel: false,
       });
@@ -35,6 +35,7 @@ describe(
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       nav.sidenav.clickNavLink(['Observe', 'Dashboards (Perses)']);
       cy.wait(5000);
       cy.changeNamespace('All Projects');
@@ -45,10 +46,6 @@ describe(
       cy.cleanupLoggingUIPlugin();
       cy.cleanupDistributeTracingUIPlugin();
       cy.cleanupExtraDashboards();
-      cy.cleanupCOO({
-        dashboards: true,
-        troubleshootingPanel: false,
-      });
       cy.cleanupLoggingLoki();
       cy.cleanupLogging();
       cy.cleanupLoki();

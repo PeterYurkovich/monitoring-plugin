@@ -18,13 +18,14 @@ describe(
   { tags: ['@cluster-health-analyzer', '@coo', '@xfail'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       cy.mockIncidentFixture('incident-scenarios/21-multi-severity-boundary-times.yaml');
     });
 

@@ -1,7 +1,7 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { CLUSTER_MONITORING_OPERATOR } from '../../../support/operators';
-import { testLegacyDashboardsRegression } from '../../../support/monitoring/03.reg_legacy_dashboards.cy';
-import { testLegacyDashboardsRegressionNamespace } from '../../../support/monitoring/06.reg_legacy_dashboards_namespace.cy';
+import { testLegacyDashboardsRegression } from '../../../support/monitoring/reg_legacy_dashboards.cy';
+import { testLegacyDashboardsRegressionNamespace } from '../../../support/monitoring/reg_legacy_dashboards_namespace.cy';
 import { commonPages } from '../../../views/common';
 import { nav } from '../../../views/nav';
 
@@ -11,11 +11,13 @@ describe(
   { tags: ['@legacy-dashboards'] },
   () => {
     before(() => {
-      cy.beforeBlock();
+      cy.ensureMonitoringPlugin();
     });
 
     beforeEach(() => {
-      // When running only this file, beforeBlock changes the namespace to openshift-monitoring so
+      cy.restoreLogin();
+      // When running only this file, ensureMonitoringPlugin changes the namespace
+      // to openshift-monitoring, so
       // we need to change it back to All Projects before landing to Dashboards page in order to
       // have API Performance dashboard loaded by default
       nav.sidenav.clickNavLink(['Observe', 'Metrics']);
@@ -37,10 +39,11 @@ describe(
   { tags: ['@legacy-dashboards'] },
   () => {
     before(() => {
-      cy.beforeBlock();
+      cy.ensureMonitoringPlugin();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       nav.sidenav.clickNavLink(['Observe', 'Dashboards']);
       commonPages.titleShouldHaveText('Dashboards');
       cy.changeNamespace(CLUSTER_MONITORING_OPERATOR.namespace);

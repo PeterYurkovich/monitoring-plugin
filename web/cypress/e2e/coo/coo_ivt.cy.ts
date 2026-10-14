@@ -6,7 +6,11 @@ describe(
   { tags: ['@alerting', '@coo', '@virtualization'] },
   () => {
     before(() => {
-      cy.beforeBlockVirtualization();
+      cy.ensureVirtualization();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Virtualization perspective - Observe Menu', () => {
