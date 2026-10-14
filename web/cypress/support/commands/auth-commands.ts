@@ -11,11 +11,16 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
-      switchPerspective(...perspectives: string[]);
-      uiLogin(provider: string, username: string, password: string, oauthurl?: string);
-      uiLogout();
-      cliLogin(username?, password?, hostapi?);
-      cliLogout();
+      switchPerspective(...perspectives: string[]): Chainable<void>;
+      uiLogin(
+        provider: string,
+        username: string,
+        password: string,
+        oauthurl?: string,
+      ): Chainable<void>;
+      uiLogout(): Chainable<void>;
+      cliLogin(username?: string, password?: string, hostapi?: string): Chainable<void>;
+      cliLogout(): Chainable<void>;
       login(
         provider?: string,
         username?: string,
@@ -28,8 +33,8 @@ declare global {
         password: string,
         oauthurl: string,
       ): Chainable<Element>;
-      adminCLI(command: string, options?): Chainable<Exec>;
-      executeAndDelete(command: string);
+      adminCLI(command: string, options?: Partial<ExecOptions>): Chainable<Exec>;
+      executeAndDelete(command: string): Chainable<void>;
       validateLogin(): Chainable<Element>;
       relogin(provider: string, username: string, password: string): Chainable<Element>;
       restoreLogin(provider?: string, username?: string, password?: string): Chainable<void>;
