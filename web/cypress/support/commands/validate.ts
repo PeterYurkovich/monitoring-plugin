@@ -9,6 +9,12 @@ import {
   TEMPO_OPERATOR,
 } from '../operators';
 
+const DASHBOARD_VALIDATION_FAILURE_PREFIX = 'Dashboard setup: ';
+
+export function isDashboardValidationFailure(reason: string): boolean {
+  return reason.startsWith(DASHBOARD_VALIDATION_FAILURE_PREFIX);
+}
+
 function hasMonitoringRoles(): Cypress.Chainable<string[]> {
   if (Cypress.env('LOGIN_USERNAME') === 'kubeadmin') {
     return cy.wrap([]);
@@ -111,14 +117,14 @@ export function validateMonitoringConsolePlugin(
       `oc get deployment monitoring-plugin -n ${CLUSTER_MONITORING_OPERATOR.namespace} -o json`,
     );
   }
-  if (opts.dashboards) {
-    checks.push(
-      'oc get persesdashboard openshift-cluster-sample-dashboard perses-dashboard-sample ' +
-        'prometheus-overview thanos-compact-overview -n perses-dev',
-      'oc get persesdatasource thanos-querier-datasource -n perses-dev',
-      `oc get pods -l app.kubernetes.io/instance=perses -n ${namespace} -o json`,
-    );
-  }
+  const dashboardChecks = [
+    `oc get persesdashboard openshift-cluster-sample-dashboard -n ${namespace}`,
+    'oc get persesdashboard perses-dashboard-sample prometheus-overview ' +
+      'thanos-compact-overview -n perses-dev',
+    'oc get persesdatasource thanos-querier-datasource -n perses-dev',
+    `oc get pods -l app.kubernetes.io/instance=perses -n ${namespace} -o json`,
+  ];
+  if (opts.dashboards) checks.push(...dashboardChecks);
   if (opts.troubleshootingPanel) {
     checks.push(
       'oc get uiplugin troubleshooting-panel',
@@ -139,8 +145,12 @@ export function validateMonitoringConsolePlugin(
   checks.forEach((command) => {
     cy.adminCLI(command, { failOnNonZeroExit: false }).then((result) => {
       if (result.code !== 0) {
+        const failurePrefix = dashboardChecks.includes(command)
+          ? DASHBOARD_VALIDATION_FAILURE_PREFIX
+          : '';
         reasons.push(
-          `${command} failed: ${result.stderr || result.stdout || `exit code ${result.code}`}`,
+          `${failurePrefix}${command} failed: ` +
+            `${result.stderr || result.stdout || `exit code ${result.code}`}`,
         );
       } else if (command.endsWith('-o json')) {
         const resource = JSON.parse(result.stdout);
@@ -165,7 +175,14 @@ export function validateMonitoringConsolePlugin(
             }
           }
         } else {
-          reasons.push(...podReadinessReasons(resource.items || [], command));
+          const failurePrefix = dashboardChecks.includes(command)
+            ? DASHBOARD_VALIDATION_FAILURE_PREFIX
+            : '';
+          reasons.push(
+            ...podReadinessReasons(resource.items || [], command).map(
+              (reason) => `${failurePrefix}${reason}`,
+            ),
+          );
           const expectedImage = command.includes('health-analyzer')
             ? Cypress.env('CHA_IMAGE')
             : command.includes('instance=monitoring') && Cypress.env('MCP_CONSOLE_IMAGE');
@@ -173,7 +190,8 @@ export function validateMonitoringConsolePlugin(
             resource.items?.forEach((pod) => {
               if (pod.spec?.containers?.[0]?.image !== expectedImage) {
                 reasons.push(
-                  `${command}: pod ${pod.metadata.name} image does not match configured image`,
+                  `${failurePrefix}${command}: pod ${pod.metadata.name} image does not match ` +
+                    'configured image',
                 );
               }
             });

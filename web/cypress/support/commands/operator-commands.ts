@@ -3,7 +3,12 @@ import { operatorAuthUtils } from './auth-commands';
 import { cooInstallUtils } from './coo-install-commands';
 import { imagePatchUtils } from './image-patch-commands';
 import { dashboardsUtils } from './dashboards-commands';
-import { validateACM, validateMonitoringConsolePlugin, validateMonitoringPlugin } from './validate';
+import {
+  isDashboardValidationFailure,
+  validateACM,
+  validateMonitoringConsolePlugin,
+  validateMonitoringPlugin,
+} from './validate';
 import { CLUSTER_MONITORING_OPERATOR, CLUSTER_OBSERVABILITY_OPERATOR } from '../operators';
 
 export {};
@@ -229,7 +234,13 @@ Cypress.Commands.add('ensureMonitoringConsolePlugin', (options?: COOSetupOptions
   validateMonitoringConsolePlugin(opts).then((reasons) => {
     if (reasons.length) {
       cy.log(`Monitoring console plugin validation failed: ${reasons.join('; ')}`);
-      beforeCOO(opts);
+      if (opts.dashboards && reasons.every(isDashboardValidationFailure)) {
+        operatorAuthUtils.loginAndAuth();
+        cy.visit('/');
+        dashboardsUtils.setupDashboardsAndPlugins();
+      } else {
+        beforeCOO(opts);
+      }
     } else {
       operatorAuthUtils.loginAndAuth();
     }
