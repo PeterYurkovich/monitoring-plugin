@@ -8,7 +8,7 @@ describe('BVT: Incidents - e2e', { tags: ['@cluster-health-analyzer', '@coo', '@
   let currentAlertName: string;
 
   before(() => {
-    cy.beforeBlockCOO({
+    cy.ensureMonitoringConsolePlugin({
       dashboards: false,
       troubleshootingPanel: false,
     });
@@ -20,6 +20,10 @@ describe('BVT: Incidents - e2e', { tags: ['@cluster-health-analyzer', '@coo', '@
       currentAlertName = alertName;
       cy.log(`Test will look for alert: ${currentAlertName}`);
     });
+  });
+
+  beforeEach(() => {
+    cy.restoreLogin();
   });
 
   it('1. Admin perspective - Incidents page - Incident with custom alert lifecycle', () => {

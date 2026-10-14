@@ -1,6 +1,6 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { nav } from '../../views/nav';
-import { testCOOCreatePerses } from '../../support/perses/03.coo_create_perses_admin.cy';
+import { testCOOCreatePerses } from '../../support/perses/coo_create_perses_admin.cy';
 import { operatorAuthUtils } from '../../support/commands/auth-commands';
 
 describe(
@@ -9,12 +9,13 @@ describe(
   () => {
     before(() => {
       operatorAuthUtils.loginAndAuth();
-      cy.switchPerspective('Core platform');
       cy.cleanupPersesTestDashboardsBeforeTests();
       cy.setupPersesExtraDashboards();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
+      cy.switchPerspective('Core platform');
       nav.sidenav.clickNavLink(['Observe', 'Dashboards (Perses)']);
       cy.wait(5000);
       cy.changeNamespace('All Projects');

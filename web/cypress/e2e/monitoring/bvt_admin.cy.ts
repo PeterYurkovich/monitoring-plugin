@@ -1,7 +1,7 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { nav } from '../../views/nav';
 import { alerts } from '../../fixtures/monitoring/alert';
-import { testBVTMonitoring } from '../../support/monitoring/00.bvt_monitoring.cy';
+import { testBVTMonitoring } from '../../support/monitoring/bvt_monitoring.cy';
 import { commonPages } from '../../views/common';
 import { overviewPage } from '../../views/overview-page';
 
@@ -10,10 +10,11 @@ describe(
   { tags: ['@alerting', '@legacy-dashboards', '@metrics', '@targets'] },
   () => {
     before(() => {
-      cy.beforeBlock();
+      cy.ensureMonitoringPlugin();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       nav.sidenav.clickNavLink(['Observe', 'Metrics']);
       commonPages.titleShouldHaveText('Metrics');
       cy.changeNamespace('All Projects');

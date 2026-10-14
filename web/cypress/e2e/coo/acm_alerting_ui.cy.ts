@@ -1,4 +1,4 @@
-// 02.acm_alerting_ui.cy.ts
+// acm_alerting_ui.cy.ts
 // E2E test for validating ACM Alerting UI integration with Cluster Observability Operator (COO)
 import '../../support/commands/auth-commands';
 import { commonPages } from '../../views/common';
@@ -10,7 +10,7 @@ import { incidentsPage } from 'cypress/views/incidents-page';
 import {
   testAlertsFleetManagementRegression,
   testAlertsRegression,
-} from 'cypress/support/monitoring/01.reg_alerts.cy';
+} from 'cypress/support/monitoring/reg_alerts.cy';
 import { listPage } from 'cypress/views/list-page';
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { CLUSTER_MONITORING_OPERATOR } from 'cypress/support/operators';
@@ -19,7 +19,15 @@ const expectedAlerts = ['Watchdog', 'Watchdog-spoke', 'ClusterCPUHealth-jb'];
 
 describe('ACM Alerting UI', { tags: ['@alerting', '@acm', '@coo'] }, () => {
   before(() => {
-    cy.beforeBlockACM();
+    cy.ensureACM();
+  });
+
+  beforeEach(() => {
+    cy.restoreLogin();
+    cy.switchPerspective('Fleet management');
+    cy.closeOnboardingModalIfPresent();
+    nav.sidenav.clickNavLink(['Observe', 'Alerting']);
+    acmAlertingPage.shouldBeLoaded();
   });
 
   it('Navigate to Fleet Management > Observe > Alerting', () => {

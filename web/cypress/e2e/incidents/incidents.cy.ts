@@ -11,11 +11,15 @@ import { incidentsPage } from '../../views/incidents-page';
 
 describe('BVT: Incidents - UI', { tags: ['@cluster-health-analyzer', '@coo'] }, () => {
   before(() => {
-    cy.beforeBlockCOO({
+    cy.ensureMonitoringConsolePlugin({
       dashboards: false,
       troubleshootingPanel: false,
     });
     incidentsPage.warmUpForPlugin();
+  });
+
+  beforeEach(() => {
+    cy.restoreLogin();
     cy.mockIncidentFixture(
       'incident-scenarios/1-single-incident-firing-critical-and-warning-alerts.yaml',
     );

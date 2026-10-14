@@ -32,6 +32,7 @@ declare global {
       executeAndDelete(command: string);
       validateLogin(): Chainable<Element>;
       relogin(provider: string, username: string, password: string): Chainable<Element>;
+      restoreLogin(provider?: string, username?: string, password?: string): Chainable<void>;
     }
   }
 }
@@ -239,6 +240,28 @@ Cypress.Commands.add('validateLogin', () => {
   cy.byTestID('username', { timeout: 120000 }).should('be.visible');
   cy.wait(10000);
   guidedTour.close();
+});
+
+Cypress.Commands.add('restoreLogin', (provider?: string, username?: string, password?: string) => {
+  if (!provider && !username && !password) {
+    operatorAuthUtils.loginAndAuth();
+    cy.visit('/');
+    return;
+  }
+
+  cy.adminCLI(
+    'oc get oauthclient openshift-browser-client -o go-template ' +
+      '--template="{{index .redirectURIs 0}}"',
+  ).then((result) => {
+    const origin = new URL(result.stdout).origin;
+    cy.login(
+      provider || Cypress.env('LOGIN_IDP'),
+      username || Cypress.env('LOGIN_USERNAME'),
+      password || Cypress.env('LOGIN_PASSWORD'),
+      origin,
+    );
+    cy.visit('/');
+  });
 });
 
 // Session-wrapped login

@@ -1,6 +1,6 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { nav } from '../../views/nav';
-import { testCOORBACPersesTestsDevUser5 } from '../../support/perses/99.coo_rbac_perses_user5.cy';
+import { testCOORBACPersesTestsDevUser5 } from '../../support/perses/coo_rbac_perses_user5.cy';
 import { operatorAuthUtils } from '../../support/commands/auth-commands';
 
 describe(
@@ -28,38 +28,20 @@ describe(
       //   `oc adm policy remove-cluster-role-from-user cluster-admin ` +
       //     `${Cypress.env('LOGIN_USERNAME')}`,
       // );
+    });
 
-      // Step 4: Clear Cypress session cache and logout
-      // This is critical because beforeBlockCOO uses cy.session() which caches the login state
-      cy.log('Clearing Cypress session cache to ensure fresh login');
-      cy.then(() => {
-        Cypress.session.clearAllSavedSessions();
-      });
-
-      // Clear all cookies and storage to fully reset browser state
-      cy.clearAllCookies();
-      cy.clearAllLocalStorage();
-      cy.clearAllSessionStorage();
-
-      // Step 5: Re-login as dev user (now without cluster-admin role)
-      // Using cy.relogin() because it doesn't require oauthurl and handles the login page directly
-
-      /**
-       * RBAC permissions for Group5 (perses-e2e-group5 / dev user5)
-       * - Cluster-wide: perses-prometheus-api-editor, persesglobaldatasource-viewer-role
-       * - openshift-monitoring: admin
-       */
-      cy.log('Re-logging in as dev user with limited permissions');
-      cy.relogin(
+    /**
+     * RBAC permissions for Group5 (perses-e2e-group5 / dev user5)
+     * - Cluster-wide: perses-prometheus-api-editor, persesglobaldatasource-viewer-role
+     * - openshift-monitoring: admin
+     */
+    beforeEach(() => {
+      cy.restoreLogin(
         Cypress.env('LOGIN_IDP_DEV_USER'),
         Cypress.env('LOGIN_USERNAME5'),
         Cypress.env('LOGIN_PASSWORD5'),
       );
-      cy.validateLogin();
       cy.closeOnboardingModalIfPresent();
-    });
-
-    beforeEach(() => {
       cy.switchPerspective('Core platform');
       nav.sidenav.clickNavLink(['Observe', 'Dashboards']);
       cy.wait(2000);

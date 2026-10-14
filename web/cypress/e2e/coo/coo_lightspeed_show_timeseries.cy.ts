@@ -46,6 +46,10 @@ describe(
       cy.reload(true);
     });
 
+    beforeEach(() => {
+      cy.restoreLogin();
+    });
+
     after(() => {
       cy.get('body').then(($body) => {
         if ($body.find(SEL.chatPanel).length > 0) {
@@ -108,7 +112,7 @@ describe(
     });
 
     it('adds the rendered chart to a new Perses dashboard via Add to Dashboard button', () => {
-      // Close the chat panel if it is open from the previous test
+      // Close the chat panel if it is already open
       cy.get('body').then(($body) => {
         if ($body.find(SEL.chatPanel).length > 0) {
           cy.get(SEL.chatButton).click();

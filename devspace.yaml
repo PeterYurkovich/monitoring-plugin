@@ -41,7 +41,7 @@ dev:
     namespace: openshift-monitoring
     labelSelector:
       app.kubernetes.io/component: monitoring-plugin
-    devImage: quay.io/openshift-observability-ui/monitoring-plugin:devspace
+    devImage: quay.io/rh-ee-pyurkovi/monitoring-plugin:devspace-peter-2
     sync:
       - path: ./web/dist:/opt/app-root/web/dist
         startContainer: true
@@ -59,7 +59,7 @@ dev:
     labelSelector:
       app.kubernetes.io/instance: monitoring
       app.kubernetes.io/managed-by: observability-operator
-    devImage: quay.io/openshift-observability-ui/monitoring-plugin:devspace
+    devImage: quay.io/rh-ee-pyurkovi/monitoring-plugin:devspace-peter-2
     patches:
       - op: replace
         path: spec.containers[0].imagePullPolicy

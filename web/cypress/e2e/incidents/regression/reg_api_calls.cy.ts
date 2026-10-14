@@ -21,7 +21,7 @@ describe(
   { tags: ['@cluster-health-analyzer', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
@@ -29,6 +29,7 @@ describe(
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       cy.log('Setting up silenced alerts mixed scenario');
       cy.mockIncidentFixture('incident-scenarios/9-silenced-alerts-mixed-scenario.yaml');
     });
@@ -134,13 +135,14 @@ describe(
   { tags: ['@cluster-health-analyzer', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
       cy.log('Mock all API endpoints as 403 Forbidden');
       cy.mockPermissionDenied();
       cy.log('Navigate to Observe -> Incidents');

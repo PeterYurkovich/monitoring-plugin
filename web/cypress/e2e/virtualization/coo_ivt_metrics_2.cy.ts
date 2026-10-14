@@ -1,8 +1,8 @@
 import { CLUSTER_MONITORING_OPERATOR } from '../../support/operators';
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { alerts } from '../../fixtures/monitoring/alert';
-import { testMetricsRegression2 } from '../../support/monitoring/02.reg_metrics_2.cy';
-import { testMetricsRegressionNamespace2 } from '../../support/monitoring/05.reg_metrics_namespace_2.cy';
+import { testMetricsRegression2 } from '../../support/monitoring/reg_metrics_2.cy';
+import { testMetricsRegressionNamespace2 } from '../../support/monitoring/reg_metrics_namespace_2.cy';
 import { commonPages } from '../../views/common';
 import { nav } from '../../views/nav';
 import { guidedTour } from '../../views/tour';
@@ -12,7 +12,11 @@ describe(
   { tags: ['@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO();
+      cy.ensureMonitoringConsolePlugin();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Installation: COO and setting up Monitoring Plugin', () => {
@@ -26,7 +30,11 @@ describe(
   { tags: ['@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockVirtualization();
+      cy.ensureVirtualization();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Virtualization perspective - Observe Menu', () => {
@@ -42,6 +50,7 @@ describe(
   { tags: ['@metrics', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       cy.validateLogin();
       cy.switchPerspective('Virtualization', 'Fleet virtualization');
@@ -62,6 +71,7 @@ describe(
   { tags: ['@metrics', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       cy.validateLogin();
       cy.switchPerspective('Virtualization', 'Fleet virtualization');

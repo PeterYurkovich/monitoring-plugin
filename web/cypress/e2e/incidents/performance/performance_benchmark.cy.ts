@@ -35,17 +35,21 @@ const THRESHOLDS = {
   INCIDENTS_CHART_MIXED_12: 5_000,
 };
 
-const collector = new BenchmarkCollector('01.performance_benchmark.cy.ts');
+const collector = new BenchmarkCollector('performance_benchmark.cy.ts');
 
 describe(
   'Regression: Performance Benchmark',
   { tags: ['@cluster-health-analyzer', '@coo'], numTestsKeptInMemory: 0 },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: false,
         troubleshootingPanel: false,
       });
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     afterEach(() => {

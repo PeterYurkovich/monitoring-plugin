@@ -35,15 +35,17 @@ export function testOverviewPageChrome(perspective: PerspectiveConfig) {
     overview.shouldBeLoaded();
     cy.contains(
       'Manage observability capabilities and access cluster tools for metrics, logs, and traces.',
-    ).should('be.visible');
+    )
+      .scrollIntoView()
+      .should('be.visible');
 
     cy.log('1.2 Verify all three sections are present');
-    overview.elements.summarySection().should('be.visible');
-    overview.elements.capabilitiesSection().should('be.visible');
-    overview.elements.advancedSection().should('be.visible');
-    cy.contains('h2', 'Stack summary').should('be.visible');
-    cy.contains('h2', 'Capabilities').should('be.visible');
-    cy.contains('h2', 'Advanced analytics').should('be.visible');
+    overview.elements.summarySection().scrollIntoView().should('be.visible');
+    overview.elements.capabilitiesSection().scrollIntoView().should('be.visible');
+    overview.elements.advancedSection().scrollIntoView().should('be.visible');
+    cy.contains('h2', 'Stack summary').scrollIntoView().should('be.visible');
+    cy.contains('h2', 'Capabilities').scrollIntoView().should('be.visible');
+    cy.contains('h2', 'Advanced analytics').scrollIntoView().should('be.visible');
 
     cy.log(`Verified: ${OVERVIEW_PAGE_TITLE} page loads with summary, capabilities, and advanced`);
   });
@@ -56,6 +58,7 @@ export function testOverviewInfoAlert(perspective: PerspectiveConfig) {
     overview.goTo();
     overview.elements
       .infoAlert()
+      .scrollIntoView()
       .should('be.visible')
       .and('contain.text', 'Cluster-wide scope')
       .and(
@@ -70,15 +73,16 @@ export function testOverviewInfoAlert(perspective: PerspectiveConfig) {
       .invoke('getItem', 'monitoring/overview/info-alert-dismissed')
       .should('eq', 'true');
 
-    cy.log('2.3 Navigate back and verify the dismissed alert stays hidden');
-    overview.goTo();
+    cy.log('2.3 Reload and verify the dismissed alert stays hidden');
+    cy.reload();
     overview.shouldBeLoaded();
     overview.elements.infoAlert().should('not.exist');
 
     cy.log('2.4 Clear the flag and verify the alert returns');
     overview.clearInfoAlertDismissed();
-    overview.goTo();
-    overview.elements.infoAlert().should('be.visible');
+    cy.reload();
+    overview.shouldBeLoaded();
+    overview.elements.infoAlert().scrollIntoView().should('be.visible');
 
     cy.log('Verified: info alert visibility, dismissal, and localStorage persistence');
   });

@@ -3,8 +3,8 @@ import { nav } from '../../views/nav';
 import {
   testCOOListPerses,
   testCOOListPersesDuplicateDashboard,
-} from '../../support/perses/01.coo_list_perses_admin.cy';
-import { testCOOListPersesNamespace } from '../../support/perses/01.coo_list_perses_admin_namespace.cy';
+} from '../../support/perses/coo_list_perses_admin.cy';
+import { testCOOListPersesNamespace } from '../../support/perses/coo_list_perses_admin_namespace.cy';
 
 //TODO: change tag to @dashboards when customizable-dashboards gets merged
 describe(
@@ -12,15 +12,16 @@ describe(
   { tags: ['@perses-dashboards', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO({
+      cy.ensureMonitoringConsolePlugin({
         dashboards: true,
         troubleshootingPanel: false,
       });
-      cy.switchPerspective('Core platform');
       cy.cleanupPersesTestDashboardsBeforeTests();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
+      cy.switchPerspective('Core platform');
       nav.sidenav.clickNavLink(['Observe', 'Dashboards (Perses)']);
       cy.wait(5000);
       cy.changeNamespace('All Projects');
@@ -38,12 +39,13 @@ describe(
   { tags: ['@perses-dashboards', '@coo'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO();
-      cy.switchPerspective('Core platform');
+      cy.ensureMonitoringConsolePlugin();
       cy.cleanupPersesTestDashboardsBeforeTests();
     });
 
     beforeEach(() => {
+      cy.restoreLogin();
+      cy.switchPerspective('Core platform');
       nav.sidenav.clickNavLink(['Observe', 'Dashboards (Perses)']);
       cy.wait(5000);
       cy.changeNamespace('All Projects');

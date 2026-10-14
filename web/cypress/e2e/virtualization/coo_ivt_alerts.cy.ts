@@ -1,7 +1,6 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
-
 import { alerts } from '../../fixtures/monitoring/alert';
-import { testAlertsRegression } from '../../support/monitoring/01.reg_alerts.cy';
+import { testAlertsRegression } from '../../support/monitoring/reg_alerts.cy';
 import { commonPages } from '../../views/common';
 import { nav } from '../../views/nav';
 import { guidedTour } from '../../views/tour';
@@ -11,7 +10,7 @@ describe(
   { tags: ['@alerting', '@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockCOO();
+      cy.ensureMonitoringConsolePlugin();
       cy.log('Installation: COO and setting up Monitoring Plugin');
     });
   },
@@ -22,7 +21,11 @@ describe(
   { tags: ['@alerting', '@coo', '@virtualization', '@slow'] },
   () => {
     before(() => {
-      cy.beforeBlockVirtualization();
+      cy.ensureVirtualization();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Virtualization perspective - Observe Menu', () => {
@@ -38,6 +41,7 @@ describe(
   { tags: ['@alerting', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       cy.validateLogin();
       cy.switchPerspective('Virtualization', 'Fleet virtualization');

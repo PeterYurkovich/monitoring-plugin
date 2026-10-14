@@ -1,6 +1,6 @@
 import { CustomerPerspectiveName } from '@/shared/constants/perspective';
 import { nav } from '../../views/nav';
-import { testBVTCOOPerses1 } from '../../support/perses/00.coo_bvt_perses_admin.cy';
+import { testBVTCOOPerses1 } from '../../support/perses/coo_bvt_perses_admin.cy';
 import { guidedTour } from '../../views/tour';
 import { commonPages } from '../../views/common';
 
@@ -10,7 +10,11 @@ describe(
 
   () => {
     before(() => {
-      cy.beforeBlockCOO();
+      cy.ensureMonitoringConsolePlugin();
+    });
+
+    beforeEach(() => {
+      cy.restoreLogin();
     });
 
     it('1. Installation: COO and setting up Monitoring Plugin', () => {
@@ -21,7 +25,11 @@ describe(
 
 describe('Installation: Virtualization', { tags: ['@virtualization', '@slow'] }, () => {
   before(() => {
-    cy.beforeBlockVirtualization();
+    cy.ensureVirtualization();
+  });
+
+  beforeEach(() => {
+    cy.restoreLogin();
   });
 
   it('1. Installation: Virtualization', () => {
@@ -36,6 +44,7 @@ describe(
   { tags: ['@perses-dashboards', '@coo', '@virtualization', '@slow'] },
   () => {
     beforeEach(() => {
+      cy.restoreLogin();
       cy.visit('/');
       guidedTour.close();
       cy.validateLogin();
