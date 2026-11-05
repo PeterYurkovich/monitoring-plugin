@@ -4,8 +4,8 @@ import { Navigate, useLocation } from 'react-router';
 
 import { AlertManagementLayout } from '@/features/alert-management-api/components/AlertManagementLayout';
 import { AlertManagementAlertsPage } from '@/features/alert-management-api/pages/alerts-page/AlertsPage';
-import { SilencesManagementPage } from '@/features/alert-management-api/pages/PlaceholderPages';
 import { AlertRulesManagementPage } from '@/features/alert-management-api/pages/rules-page/RulesPage';
+import { SilencesManagementPage } from '@/features/alert-management-api/pages/silences-page/SilencesManagementPage';
 import { McpCmoAlertingPage } from '@/features/incidents/pages/IncidentsPage';
 import { MonitoringProvider } from '@/shared/contexts/MonitoringContext';
 import type { MonitoringPlugins, Prometheus } from '@/shared/utils/utils';

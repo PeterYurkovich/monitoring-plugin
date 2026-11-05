@@ -4,6 +4,7 @@ import { useQueryParam } from 'use-query-params';
 import { AlertManagementHeader } from '@/features/alert-management-api/components/AlertManagementHeader';
 import { RefreshControlProps } from '@/features/alert-management-api/components/RefreshControl';
 import { useAlertManagementData } from '@/features/alert-management-api/hooks/useAlertManagementData';
+import { useSilencesQuery } from '@/features/alert-management-api/hooks/useSilencesQuery';
 import { QueryParams } from '@/shared/constants/query-params';
 import { RefreshIntervalParam } from '@/shared/constants/timespan';
 
@@ -17,7 +18,12 @@ export function AlertManagementLayout({ children }: LayoutProps) {
     RefreshIntervalParam,
   );
   const { rulesQuery, alertsQuery } = useAlertManagementData(intervalMs);
-  const lastRefreshedAt = Math.max(rulesQuery.dataUpdatedAt, alertsQuery.dataUpdatedAt);
+  const silencesQuery = useSilencesQuery(intervalMs);
+  const lastRefreshedAt = Math.max(
+    rulesQuery.dataUpdatedAt,
+    alertsQuery.dataUpdatedAt,
+    silencesQuery.dataUpdatedAt,
+  );
   const refresh: RefreshControlProps = { intervalMs, onIntervalChange, lastRefreshedAt };
 
   return <AlertManagementHeader refresh={refresh}>{children}</AlertManagementHeader>;

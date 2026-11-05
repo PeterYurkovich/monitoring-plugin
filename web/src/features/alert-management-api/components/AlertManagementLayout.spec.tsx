@@ -7,8 +7,8 @@ import { QueryParamProvider } from 'use-query-params';
 
 import { AlertManagementLayout } from '@/features/alert-management-api/components/AlertManagementLayout';
 import { AlertManagementProvider } from '@/features/alert-management-api/pages/AlertManagementRouter';
-import { SilencesManagementPage } from '@/features/alert-management-api/pages/PlaceholderPages';
 import { AlertRulesManagementPage } from '@/features/alert-management-api/pages/rules-page/RulesPage';
+import { SilencesManagementPage } from '@/features/alert-management-api/pages/silences-page/SilencesManagementPage';
 import { McpCmoAlertingPage } from '@/features/incidents/pages/IncidentsPage';
 import { ReactRouter7Adapter } from '@/shared/utils/react-router-7-adapter';
 
@@ -16,6 +16,8 @@ const flags = vi.hoisted(() => ({ incidents: false }));
 const queryTimes = vi.hoisted(() => ({
   rules: Date.UTC(2026, 8, 29, 12, 15, 0),
   alerts: Date.UTC(2026, 8, 29, 12, 16, 15),
+  silences: Date.UTC(2026, 8, 29, 12, 16, 0),
+  silencesData: [],
 }));
 
 vi.mock('@/features/incidents/pages/IncidentsPage', () => ({
@@ -30,6 +32,13 @@ vi.mock('@/features/alert-management-api/hooks/useAlertManagementData', () => ({
   useAlertManagementData: () => ({
     rulesQuery: { dataUpdatedAt: queryTimes.rules },
     alertsQuery: { dataUpdatedAt: queryTimes.alerts },
+  }),
+}));
+
+vi.mock('@/features/alert-management-api/hooks/useSilencesQuery', () => ({
+  useSilencesQuery: () => ({
+    data: queryTimes.silencesData,
+    dataUpdatedAt: queryTimes.silences,
   }),
 }));
 
@@ -51,6 +60,7 @@ vi.mock('@/shared/hooks/useFeatures', () => ({
 vi.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   AlertSeverity: { Critical: 'critical', Warning: 'warning', Info: 'info', None: 'none' },
   AlertStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced' },
+  SilenceStates: { Active: 'active', Pending: 'pending', Expired: 'expired' },
   DocumentTitle: () => null,
   ListPageHeader: ({ title, children }: { title: string; children?: ReactNode }) => (
     <header>
