@@ -1,5 +1,6 @@
 import { Silence, SilenceStates } from '@openshift-console/dynamic-plugin-sdk';
 
+import { parseTableColumns } from '@/features/alert-management-api/utils/table-columns';
 import { getSilenceName, silenceMatcherEqualitySymbol } from '@/shared/utils/alerts/formatting';
 
 export const silenceColumns = [
@@ -50,16 +51,7 @@ export const normalizeSilences = (silences: Silence[]) =>
     return { ...normalized, name: getSilenceName(normalized) };
   });
 export function parseSilenceColumns(value: string | null): SilenceColumn[] {
-  try {
-    const parsed: unknown = JSON.parse(value ?? 'null');
-    if (!Array.isArray(parsed)) return defaultSilenceColumns;
-    const columns = [...new Set(parsed)].filter((column): column is SilenceColumn =>
-      defaultSilenceColumns.includes(column as SilenceColumn),
-    );
-    return columns.includes('name') ? columns : defaultSilenceColumns;
-  } catch {
-    return defaultSilenceColumns;
-  }
+  return parseTableColumns(value, silenceColumns, defaultSilenceColumns, ['name']);
 }
 export function filterSilences(silences: Silence[], filters: SilenceFilters) {
   const name = filters.name.trim().toLocaleLowerCase();

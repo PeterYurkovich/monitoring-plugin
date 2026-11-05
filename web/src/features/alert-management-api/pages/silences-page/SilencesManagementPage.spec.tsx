@@ -95,6 +95,14 @@ it('filters pending and name, resets page and selection, and supports browser hi
   expect(tableNames()).toHaveLength(1);
   expect(tableNames()[0]).toContain('Alert0');
 });
+it('uses the first valid URL state to match the single-select control', () => {
+  mount('?state=invalid&state=pending&state=active');
+  expect((screen.getByRole('combobox', { name: 'Silence state' }) as HTMLSelectElement).value).toBe(
+    'pending',
+  );
+  expect(tableNames()).toHaveLength(1);
+  expect(tableNames()[0]).toContain('Alert1');
+});
 it('sorts with URL controls and clears selection on refreshed data', () => {
   mount('?perPage=2');
   fireEvent.click(screen.getByRole('button', { name: 'Silence name' }));

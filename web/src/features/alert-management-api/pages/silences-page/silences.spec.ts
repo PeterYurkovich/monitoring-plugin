@@ -45,6 +45,7 @@ it('sorts chronologically without mutating the source and validates columns', ()
   expect(silences[0].id).toBe('1');
   expect(parseSilenceColumns('invalid')).toEqual(defaultSilenceColumns);
   expect(parseSilenceColumns('["status"]')).toEqual(defaultSilenceColumns);
-  expect(parseSilenceColumns('["name","name","unknown"]')).toEqual(['name']);
+  expect(parseSilenceColumns('["name","name","unknown"]')).toEqual(defaultSilenceColumns);
+  expect(parseSilenceColumns('["name","name"]')).toEqual(['name']);
   expect(parseSilenceColumns('["status","name"]')).toEqual(['status', 'name']);
 });

@@ -15,11 +15,11 @@ import {
   Title,
   Tooltip,
 } from '@patternfly/react-core';
-import { ColumnsIcon } from '@patternfly/react-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
+import { ManageColumnsButton } from '@/features/alert-management-api/components/ManageColumnsButton';
 import { SelectedFilters } from '@/features/alert-management-api/components/SelectedFilters';
 import { TableColumnsModal } from '@/features/alert-management-api/components/TableColumnsModal';
 import { useSilencesQuery } from '@/features/alert-management-api/hooks/useSilencesQuery';
@@ -61,7 +61,8 @@ export function SilencesManagementPage() {
       name: params.get('name') ?? '',
       state: params
         .getAll('state')
-        .filter((value) => silenceStates.includes(value as (typeof silenceStates)[number])),
+        .filter((value) => silenceStates.includes(value as (typeof silenceStates)[number]))
+        .slice(0, 1),
     }),
     [params],
   );
@@ -146,16 +147,20 @@ export function SilencesManagementPage() {
                   onClear={() => setFilters({ ...filters, name: '' })}
                 />
               </FlexItem>
-              <Tooltip content={t('Expiring silences is not available yet')}>
-                <Button variant="secondary" isAriaDisabled>
-                  {t('Expire selected silences')} ({selected.size})
-                </Button>
-              </Tooltip>
-              <Tooltip content={t('Silence creation is not available yet')}>
-                <Button variant="primary" isAriaDisabled>
-                  {t('Create silence')}
-                </Button>
-              </Tooltip>
+              <FlexItem>
+                <Tooltip content={t('Expiring silences is not available yet')}>
+                  <Button variant="secondary" isAriaDisabled>
+                    {t('Expire selected silences')} ({selected.size})
+                  </Button>
+                </Tooltip>
+              </FlexItem>
+              <FlexItem>
+                <Tooltip content={t('Silence creation is not available yet')}>
+                  <Button variant="primary" isAriaDisabled>
+                    {t('Create silence')}
+                  </Button>
+                </Tooltip>
+              </FlexItem>
             </Flex>
             <SelectedFilters<SilenceFilters, 'state'>
               filters={filters}
@@ -174,16 +179,7 @@ export function SilencesManagementPage() {
               {...pagination}
               variant="top"
               isCompact
-              rightActions={
-                <Tooltip content={t('Manage columns')}>
-                  <Button
-                    variant="control"
-                    icon={<ColumnsIcon />}
-                    aria-label={t('Manage columns')}
-                    onClick={() => setColumnsOpen(true)}
-                  />
-                </Tooltip>
-              }
+              rightActions={<ManageColumnsButton onClick={() => setColumnsOpen(true)} />}
             />
             <Divider style={{ marginBlockStart: 'var(--pf-t--global--spacer--sm)' }} />
             <div style={{ overflowX: 'auto' }}>
