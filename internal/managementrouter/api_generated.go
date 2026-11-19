@@ -193,6 +193,14 @@ type GetRulesResponseData struct {
 	Groups []PrometheusRuleGroup `json:"groups"`
 }
 
+// GetSilencesResponse defines model for GetSilencesResponse.
+type GetSilencesResponse struct {
+	Data struct {
+		Silences []Silence `json:"silences"`
+	} `json:"data"`
+	Warnings *[]string `json:"warnings,omitempty"`
+}
+
 // PrometheusAlert defines model for PrometheusAlert.
 type PrometheusAlert = k8s.PrometheusAlert
 
@@ -219,6 +227,17 @@ type RecordingRule = k8s.RecordingRule
 
 // Rule defines model for Rule.
 type Rule = k8s.Rule
+
+// Silence defines model for Silence.
+type Silence = k8s.Silence
+
+// SilenceMatcher defines model for SilenceMatcher.
+type SilenceMatcher struct {
+	IsEqual *bool  `json:"isEqual,omitempty"`
+	IsRegex bool   `json:"isRegex"`
+	Name    string `json:"name"`
+	Value   string `json:"value"`
+}
 
 // UpdateAlertRuleRequest Partial update for a single alert rule. At least one of labels, alertingRuleEnabled, or classification must be set. alertingRuleEnabled cannot be combined with labels or classification in the same request.
 type UpdateAlertRuleRequest struct {
@@ -265,6 +284,12 @@ type GetRulesParams struct {
 // GetRulesParamsState defines parameters for GetRules.
 type GetRulesParamsState string
 
+// GetSilencesParams defines parameters for GetSilences.
+type GetSilencesParams struct {
+	// Namespace Restrict retrieval to this namespace using Alertmanager tenancy.
+	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
 // BulkDeleteUserDefinedAlertRulesJSONRequestBody defines body for BulkDeleteUserDefinedAlertRules for application/json ContentType.
 type BulkDeleteUserDefinedAlertRulesJSONRequestBody = BulkDeleteAlertRulesRequest
 
@@ -303,6 +328,9 @@ type ServerInterface interface {
 	// Update a single alert rule
 	// (PATCH /rules/{ruleId})
 	UpdateAlertRule(w http.ResponseWriter, r *http.Request, ruleId string)
+	// Get silences
+	// (GET /silences)
+	GetSilences(w http.ResponseWriter, r *http.Request, params GetSilencesParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -482,6 +510,33 @@ func (siw *ServerInterfaceWrapper) UpdateAlertRule(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetSilences operation middleware
+func (siw *ServerInterfaceWrapper) GetSilences(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSilencesParams
+
+	// ------------- Optional query parameter "namespace" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "namespace", r.URL.Query(), &params.Namespace, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "namespace", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSilences(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -610,6 +665,8 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 	r.HandleFunc(options.BaseURL+"/rules/{ruleId}", wrapper.DeleteAlertRule).Methods("DELETE")
 
 	r.HandleFunc(options.BaseURL+"/rules/{ruleId}", wrapper.UpdateAlertRule).Methods("PATCH")
+
+	r.HandleFunc(options.BaseURL+"/silences", wrapper.GetSilences).Methods("GET")
 
 	return r
 }

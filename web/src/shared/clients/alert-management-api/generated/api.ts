@@ -137,6 +137,45 @@ export interface AlertingHealth {
   userWorkload?: AlertingStackHealth;
 }
 
+export interface SilenceMatcher {
+  name: string;
+  value: string;
+  isRegex: boolean;
+  isEqual?: boolean;
+}
+
+export type SilenceStatusState = (typeof SilenceStatusState)[keyof typeof SilenceStatusState];
+
+export const SilenceStatusState = {
+  active: 'active',
+  pending: 'pending',
+  expired: 'expired',
+} as const;
+
+export type SilenceStatus = {
+  state: SilenceStatusState;
+};
+
+export interface Silence {
+  id: string;
+  matchers: SilenceMatcher[];
+  startsAt: string;
+  endsAt: string;
+  updatedAt: string;
+  createdBy: string;
+  comment: string;
+  status: SilenceStatus;
+}
+
+export type GetSilencesResponseData = {
+  silences: Silence[];
+};
+
+export interface GetSilencesResponse {
+  data: GetSilencesResponseData;
+  warnings?: string[];
+}
+
 export interface GetAlertsResponseData {
   alerts: PrometheusAlert[];
 }
@@ -326,6 +365,11 @@ export interface ErrorResponse {
 
 export type LabelFiltersParameter = { [key: string]: string };
 
+export type GetSilencesParams = {
+  /** Restrict retrieval to this namespace using Alertmanager tenancy. */
+  namespace?: string;
+};
+
 export type GetAlertsParams = {
   /** Alert state. Omit or pass an empty string for all states. Values are trimmed and matched case-insensitively. Repeated values are rejected. */
   state?: GetAlertsState;
@@ -376,6 +420,86 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetSilencesUrl = (params?: GetSilencesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/silences?${stringifiedParams}` : `/silences`;
+};
+
+/**
+ * Returns un-enriched silences visible to the caller from the platform and optional user-workload Alertmanagers. Tries cluster-wide access first; on RBAC denial or a missing route, queries each namespace through Alertmanager tenancy. Namespace denials contribute no results. Partial failures are warnings.
+ * @summary Get silences
+ */
+export const getSilences = async (
+  params?: GetSilencesParams,
+  options?: Parameters<typeof alertManagementFetch>[1],
+): Promise<GetSilencesResponse> => {
+  return alertManagementFetch<GetSilencesResponse>(getGetSilencesUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetSilencesQueryKey = (params?: GetSilencesParams) => {
+  return [`/silences`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetSilencesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSilences>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetSilencesParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getSilences>>, TError, TData>;
+    request?: SecondParameter<typeof alertManagementFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSilencesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSilences>>> = ({ signal }) =>
+    getSilences(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSilences>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSilencesQueryResult = NonNullable<Awaited<ReturnType<typeof getSilences>>>;
+export type GetSilencesQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get silences
+ */
+
+export function useGetSilences<
+  TData = Awaited<ReturnType<typeof getSilences>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetSilencesParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getSilences>>, TError, TData>;
+    request?: SecondParameter<typeof alertManagementFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSilencesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getGetAlertsUrl = (params?: GetAlertsParams) => {
   const normalizedParams = new URLSearchParams();

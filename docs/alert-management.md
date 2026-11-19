@@ -43,6 +43,38 @@ This is a cluster configuration choice and does not change the plugin API shape.
 
 The plugin intentionally reads from only the in-cluster Alertmanager endpoints. Supporting multiple external Alertmanagers would introduce ambiguous alert state and silencing outcomes because each instance can apply different routing, inhibition, and silence configurations.
 
+### Reading silences
+
+`GET /api/v1/alerting/silences` returns Alertmanager v2 silence objects without
+classification, rule correlation, or other enrichment:
+
+```json
+{"data":{"silences":[]}}
+```
+
+The backend reads the platform Alertmanager and, when deployed, the separate
+user-workload Alertmanager. For each source it tries cluster-wide access using
+the requesting user's bearer token. If access is forbidden, it discovers **all
+namespaces**, including those without PrometheusRules, and queries the
+Alertmanager tenancy API on port 9092 for each namespace with the same token.
+Namespace RBAC denials contribute no results. Duplicate silence IDs from
+namespace fan-out are returned once per Alertmanager instance.
+
+Use `?namespace=my-project` to query only that namespace through tenancy.
+Only one `namespace` parameter is accepted; other query parameters are rejected.
+Namespace access requires the `monitoring-rules-edit` or `monitoring-edit`
+cluster role in the project. Cluster-wide read access requires the
+`monitoring-alertmanager-view` role in the Alertmanager's namespace (or an
+equivalent broader permission).
+
+Partial retrieval failures are returned in an optional top-level `warnings`
+array. If every attempted source fails, the request fails instead of returning
+an apparently empty result. Callers without access receive an empty array;
+missing or rejected authentication returns HTTP 401. External Alertmanagers
+are not queried. When an Alertmanager route is absent (for example, a separate
+UWM Alertmanager without an exposed route), reads also fall back to namespace
+tenancy through the service.
+
 ### Managing alert rules via the Management API
 
 | Operation | Single | Bulk |

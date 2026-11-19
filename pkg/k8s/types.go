@@ -45,6 +45,9 @@ type Client interface {
 
 // PrometheusAlertsInterface defines operations for managing PrometheusAlerts
 type PrometheusAlertsInterface interface {
+	// FetchSilences returns visible Alertmanager silences.
+	// Non-fatal endpoint failures are returned as warnings rather than errors.
+	FetchSilences(ctx context.Context, namespace string) ([]Silence, []string, error)
 	// FetchAlerts retrieves Prometheus alerts with optional state filtering.
 	// Non-fatal endpoint failures are returned as warnings rather than errors.
 	FetchAlerts(ctx context.Context, req GetAlertsRequest) ([]PrometheusAlert, []string, error)

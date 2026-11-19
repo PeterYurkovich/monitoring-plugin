@@ -57,6 +57,9 @@ type Client interface {
 	// Non-fatal endpoint failures are returned as warnings.
 	EnrichRules(ctx context.Context, req k8s.GetRulesRequest) ([]k8s.PrometheusRuleGroup, []string, error)
 
+	// GetSilences retrieves visible silences without enrichment.
+	GetSilences(ctx context.Context, namespace string) ([]k8s.Silence, []string, error)
+
 	// GetAlertingHealth retrieves the alerting stack health status
 	GetAlertingHealth(ctx context.Context) (k8s.AlertingHealth, error)
 }

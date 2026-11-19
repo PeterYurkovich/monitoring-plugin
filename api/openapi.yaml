@@ -11,6 +11,47 @@ servers:
   - url: /api/v1/alerting
 
 paths:
+  /silences:
+    get:
+      operationId: GetSilences
+      summary: Get silences
+      description: >
+        Returns un-enriched silences visible to the caller from the platform and
+        optional user-workload Alertmanagers. Tries cluster-wide access first;
+        on RBAC denial or a missing route, queries each namespace through Alertmanager tenancy.
+        Namespace denials contribute no results. Partial failures are warnings.
+      parameters:
+        - name: namespace
+          in: query
+          description: Restrict retrieval to this namespace using Alertmanager tenancy.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Silences and any non-fatal fetch warnings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSilencesResponse"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid authorization token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /alerts:
     get:
       operationId: GetAlerts
@@ -723,6 +764,71 @@ components:
       x-go-type-import:
         path: github.com/openshift/monitoring-plugin/pkg/k8s
         name: k8s
+
+    SilenceMatcher:
+      type: object
+      required: [name, value, isRegex]
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        isRegex:
+          type: boolean
+        isEqual:
+          type: boolean
+
+    Silence:
+      type: object
+      required: [id, matchers, startsAt, endsAt, updatedAt, createdBy, comment, status]
+      properties:
+        id:
+          type: string
+        matchers:
+          type: array
+          items:
+            $ref: "#/components/schemas/SilenceMatcher"
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        comment:
+          type: string
+        status:
+          type: object
+          required: [state]
+          properties:
+            state:
+              type: string
+              enum: [active, pending, expired]
+      x-go-type: k8s.Silence
+      x-go-type-import:
+        path: github.com/openshift/monitoring-plugin/pkg/k8s
+        name: k8s
+
+    GetSilencesResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [silences]
+          properties:
+            silences:
+              type: array
+              items:
+                $ref: "#/components/schemas/Silence"
+        warnings:
+          type: array
+          items:
+            type: string
 
     GetAlertsResponse:
       type: object

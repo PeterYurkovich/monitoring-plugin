@@ -80,16 +80,18 @@ func (c *namespaceCache) set(namespaces []string) {
 }
 
 type prometheusAlerts struct {
-	routeClient                  routeclient.Interface
-	coreClient                   corev1client.CoreV1Interface
-	config                       *rest.Config
-	ruleManager                  PrometheusRuleInterface
-	nsCache                      *namespaceCache
-	thanosTunnel                 portForwardTunnel
-	serviceCAMu                  sync.Mutex
-	serviceCAFallbackWarningOnce sync.Once
-	serviceCAPEM                 []byte
-	serviceCAExpiresAt           time.Time
+	routeClient                    routeclient.Interface
+	coreClient                     corev1client.CoreV1Interface
+	config                         *rest.Config
+	ruleManager                    PrometheusRuleInterface
+	nsCache                        *namespaceCache
+	thanosTunnel                   portForwardTunnel
+	platformAlertmanagerTunnel     portForwardTunnel
+	userWorkloadAlertmanagerTunnel portForwardTunnel
+	serviceCAMu                    sync.Mutex
+	serviceCAFallbackWarningOnce   sync.Once
+	serviceCAPEM                   []byte
+	serviceCAExpiresAt             time.Time
 }
 
 // GetAlertsRequest holds parameters for filtering alerts

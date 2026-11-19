@@ -109,8 +109,9 @@ func (m *MockClient) Namespace() k8s.NamespaceInterface {
 }
 
 type MockPrometheusAlertsInterface struct {
-	FetchAlertsFunc func(ctx context.Context, req k8s.GetAlertsRequest) ([]k8s.PrometheusAlert, []string, error)
-	FetchRulesFunc  func(ctx context.Context, req k8s.GetRulesRequest) ([]k8s.PrometheusRuleGroup, []string, error)
+	FetchSilencesFunc func(ctx context.Context, namespace string) ([]k8s.Silence, []string, error)
+	FetchAlertsFunc   func(ctx context.Context, req k8s.GetAlertsRequest) ([]k8s.PrometheusAlert, []string, error)
+	FetchRulesFunc    func(ctx context.Context, req k8s.GetRulesRequest) ([]k8s.PrometheusRuleGroup, []string, error)
 
 	ActiveAlerts []k8s.PrometheusAlert
 	RuleGroups   []k8s.PrometheusRuleGroup
@@ -132,6 +133,13 @@ func (m *MockPrometheusAlertsInterface) FetchAlerts(ctx context.Context, req k8s
 		return m.ActiveAlerts, nil, nil
 	}
 	return []k8s.PrometheusAlert{}, nil, nil
+}
+
+func (m *MockPrometheusAlertsInterface) FetchSilences(ctx context.Context, namespace string) ([]k8s.Silence, []string, error) {
+	if m.FetchSilencesFunc != nil {
+		return m.FetchSilencesFunc(ctx, namespace)
+	}
+	return []k8s.Silence{}, nil, nil
 }
 
 func (m *MockPrometheusAlertsInterface) FetchRules(ctx context.Context, req k8s.GetRulesRequest) ([]k8s.PrometheusRuleGroup, []string, error) {
