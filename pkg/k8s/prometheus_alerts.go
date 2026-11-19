@@ -80,16 +80,16 @@ func (c *namespaceCache) set(namespaces []string) {
 }
 
 type prometheusAlerts struct {
-	routeClient        routeclient.Interface
-	coreClient         corev1client.CoreV1Interface
-	config             *rest.Config
-	ruleManager        PrometheusRuleInterface
-	nsCache            *namespaceCache
-	tunnel             thanosPortForward
-	serviceCAMu        sync.Mutex
-	serviceCAWarn      sync.Once
-	serviceCAPEM       []byte
-	serviceCAExpiresAt time.Time
+	routeClient                  routeclient.Interface
+	coreClient                   corev1client.CoreV1Interface
+	config                       *rest.Config
+	ruleManager                  PrometheusRuleInterface
+	nsCache                      *namespaceCache
+	thanosTunnel                 portForwardTunnel
+	serviceCAMu                  sync.Mutex
+	serviceCAFallbackWarningOnce sync.Once
+	serviceCAPEM                 []byte
+	serviceCAExpiresAt           time.Time
 }
 
 // GetAlertsRequest holds parameters for filtering alerts
@@ -497,7 +497,7 @@ func (pa *prometheusAlerts) thanosTenancyReachable(ctx context.Context, path str
 		if err == nil {
 			return true
 		}
-		if isTenancyExpectedError(err) {
+		if isExpectedThanosTenancyError(err) {
 			continue
 		}
 		return false
@@ -506,11 +506,11 @@ func (pa *prometheusAlerts) thanosTenancyReachable(ctx context.Context, path str
 	return false
 }
 
-// isTenancyExpectedError returns true for errors that are expected when probing
+// isExpectedThanosTenancyError returns true for errors that are expected when probing
 // Thanos tenancy endpoints across user namespaces — e.g. the namespace has no
 // rules (404), the SA lacks access (401/403), or the namespace is not yet
 // instrumented. These are skipped; only a network/server error aborts the probe.
-func isTenancyExpectedError(err error) bool {
+func isExpectedThanosTenancyError(err error) bool {
 	if err == nil {
 		return false
 	}
@@ -524,7 +524,7 @@ func isTenancyExpectedError(err error) bool {
 }
 
 func (pa *prometheusAlerts) getAlertsViaProxy(ctx context.Context, namespace string, routeName string, source string) ([]PrometheusAlert, error) {
-	raw, err := pa.getPrometheusResponse(ctx, namespace, routeName, PrometheusAlertsPath)
+	raw, err := pa.getMonitoringRouteResponse(ctx, namespace, routeName, PrometheusAlertsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -562,7 +562,7 @@ func (pa *prometheusAlerts) getAlertsViaThanosTenancy(ctx context.Context, names
 }
 
 func (pa *prometheusAlerts) getAlertmanagerAlerts(ctx context.Context, namespace string, routeName string, source string) ([]PrometheusAlert, error) {
-	raw, err := pa.getPrometheusResponse(ctx, namespace, routeName, AlertmanagerAlertsPath)
+	raw, err := pa.getMonitoringRouteResponse(ctx, namespace, routeName, AlertmanagerAlertsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -691,7 +691,7 @@ func (pa *prometheusAlerts) getRulesViaThanosTenancyNamespaces(ctx context.Conte
 }
 
 func (pa *prometheusAlerts) getRulesViaProxy(ctx context.Context, namespace string, routeName string, source string) ([]PrometheusRuleGroup, error) {
-	raw, err := pa.getPrometheusResponse(ctx, namespace, routeName, PrometheusRulesPath)
+	raw, err := pa.getMonitoringRouteResponse(ctx, namespace, routeName, PrometheusRulesPath)
 	if err != nil {
 		return nil, err
 	}
@@ -765,8 +765,8 @@ func parsePrometheusRulesResponse(raw []byte, apiName string) ([]PrometheusRuleG
 	return groups, nil
 }
 
-func (pa *prometheusAlerts) getPrometheusResponse(ctx context.Context, namespace string, routeName string, path string) ([]byte, error) {
-	url, err := pa.buildPrometheusURL(ctx, namespace, routeName, path)
+func (pa *prometheusAlerts) getMonitoringRouteResponse(ctx context.Context, namespace string, routeName string, path string) ([]byte, error) {
+	requestURL, err := pa.buildMonitoringRouteURL(ctx, namespace, routeName, path)
 	if err != nil {
 		return nil, err
 	}
@@ -775,7 +775,7 @@ func (pa *prometheusAlerts) getPrometheusResponse(ctx context.Context, namespace
 		return nil, err
 	}
 
-	return pa.executeRequest(ctx, client, url)
+	return pa.executeRequest(ctx, client, requestURL)
 }
 
 func (pa *prometheusAlerts) getThanosTenancyResponse(ctx context.Context, path string, namespace string) ([]byte, error) {
@@ -786,7 +786,7 @@ func (pa *prometheusAlerts) getThanosTenancyResponse(ctx context.Context, path s
 	baseURL := fmt.Sprintf("https://%s.%s.svc:%d", ThanosQuerierServiceName, ClusterMonitoringNamespace, DefaultThanosQuerierTenancyRulesPort)
 	requestURL := fmt.Sprintf("%s%s?namespace=%s", baseURL, path, url.QueryEscape(namespace))
 
-	client, err := pa.tenancyHTTPClient(ctx)
+	client, err := pa.thanosTenancyHTTPClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -794,8 +794,8 @@ func (pa *prometheusAlerts) getThanosTenancyResponse(ctx context.Context, path s
 	return pa.executeRequest(ctx, client, requestURL)
 }
 
-func (pa *prometheusAlerts) buildPrometheusURL(ctx context.Context, namespace string, routeName string, path string) (string, error) {
-	route, err := pa.fetchPrometheusRoute(ctx, namespace, routeName)
+func (pa *prometheusAlerts) buildMonitoringRouteURL(ctx context.Context, namespace string, routeName string, path string) (string, error) {
+	route, err := pa.fetchMonitoringRoute(ctx, namespace, routeName)
 	if err != nil {
 		return "", err
 	}
@@ -803,7 +803,7 @@ func (pa *prometheusAlerts) buildPrometheusURL(ctx context.Context, namespace st
 	return buildRouteURL(route.Spec.Host, route.Spec.Path, path), nil
 }
 
-func (pa *prometheusAlerts) fetchPrometheusRoute(ctx context.Context, namespace string, routeName string) (*routev1.Route, error) {
+func (pa *prometheusAlerts) fetchMonitoringRoute(ctx context.Context, namespace string, routeName string) (*routev1.Route, error) {
 	if pa.routeClient == nil {
 		return nil, fmt.Errorf("route client is not configured")
 	}

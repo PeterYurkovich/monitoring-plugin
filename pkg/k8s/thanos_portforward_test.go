@@ -19,11 +19,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
-func TestReadyThanosPodName(t *testing.T) {
+func TestReadyPodName(t *testing.T) {
 	now := metav1.Now()
 	ready := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Name: "thanos-querier-ready"},
@@ -48,7 +47,7 @@ func TestReadyThanosPodName(t *testing.T) {
 		Status: corev1.ConditionFalse,
 	}}
 
-	name, err := readyThanosPodName([]corev1.Pod{deleting, pending, notReady, ready})
+	name, err := readyPodName([]corev1.Pod{deleting, pending, notReady, ready})
 	if err != nil {
 		t.Fatalf("ready pod: %v", err)
 	}
@@ -56,95 +55,16 @@ func TestReadyThanosPodName(t *testing.T) {
 		t.Fatalf("pod %q, want %q", name, ready.Name)
 	}
 
-	if _, err := readyThanosPodName(nil); err == nil {
+	if _, err := readyPodName(nil); err == nil {
 		t.Fatal("expected error when no pod is ready")
 	}
 }
 
-func TestServiceCAFromConfigMapData(t *testing.T) {
-	bundle := "-----BEGIN CERTIFICATE-----\nbundle\n-----END CERTIFICATE-----\n"
-	injected := "-----BEGIN CERTIFICATE-----\ninjected\n-----END CERTIFICATE-----\n"
-
-	got, err := serviceCAFromConfigMapData(map[string]string{
-		openshiftServiceCABundleKey:   bundle,
-		openshiftServiceCAInjectedKey: injected,
-	})
-	if err != nil {
-		t.Fatalf("prefer bundle key: %v", err)
-	}
-	if string(got) != bundle {
-		t.Fatalf("got %q, want bundle key", got)
-	}
-
-	got, err = serviceCAFromConfigMapData(map[string]string{
-		openshiftServiceCAInjectedKey: injected,
-	})
-	if err != nil {
-		t.Fatalf("injected key: %v", err)
-	}
-	if string(got) != injected {
-		t.Fatalf("got %q, want injected key", got)
-	}
-
-	if _, err := serviceCAFromConfigMapData(map[string]string{
-		openshiftServiceCABundleKey: "not a certificate",
-	}); err == nil {
-		t.Fatal("expected error when no certificate is present")
-	}
-}
-
-func TestOutOfClusterServiceCAFromConfigMap(t *testing.T) {
-	pemData := "-----BEGIN CERTIFICATE-----\nfrom-api\n-----END CERTIFICATE-----\n"
-	client := fake.NewClientset(&corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      openshiftServiceCAConfigMap,
-			Namespace: openshiftServiceCANamespace,
-		},
-		Data: map[string]string{openshiftServiceCABundleKey: pemData},
-	})
-	pa := &prometheusAlerts{coreClient: client.CoreV1()}
-
-	got, err := pa.outOfClusterServiceCA(context.Background())
-	if err != nil {
-		t.Fatalf("fetch service CA: %v", err)
-	}
-	if string(got) != pemData {
-		t.Fatalf("got %q", got)
-	}
-
-	pa.coreClient = nil
-	got, err = pa.outOfClusterServiceCA(context.Background())
-	if err != nil {
-		t.Fatalf("cached service CA: %v", err)
-	}
-	if string(got) != pemData {
-		t.Fatalf("cached got %q", got)
-	}
-
-	pa.coreClient = client.CoreV1()
-	configMap, err := client.CoreV1().ConfigMaps(openshiftServiceCANamespace).Get(context.Background(), openshiftServiceCAConfigMap, metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("get service CA configmap: %v", err)
-	}
-	configMap.Data[openshiftServiceCABundleKey] = "-----BEGIN CERTIFICATE-----\nrotated\n-----END CERTIFICATE-----\n"
-	if _, err := client.CoreV1().ConfigMaps(openshiftServiceCANamespace).Update(context.Background(), configMap, metav1.UpdateOptions{}); err != nil {
-		t.Fatalf("rotate service CA: %v", err)
-	}
-	pa.serviceCAExpiresAt = time.Now().Add(-time.Second)
-	got, err = pa.outOfClusterServiceCA(context.Background())
-	if err != nil {
-		t.Fatalf("refresh service CA: %v", err)
-	}
-	if string(got) != configMap.Data[openshiftServiceCABundleKey] {
-		t.Fatalf("refreshed got %q", got)
-	}
-}
-
-func TestOutOfClusterTenancyDialsPortForward(t *testing.T) {
+func TestOutOfClusterThanosTenancyDialsPortForward(t *testing.T) {
 	t.Setenv("KUBECONFIG", "kubeconfig")
 	t.Setenv(serviceCAFileEnv, "")
 
-	caPEM, serverCert := mustThanosServerCert(t)
+	caPEM, serverCert := mustServiceServerCert(t, "thanos-querier.openshift-monitoring.svc")
 	listener, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
 		MinVersion:   tls.VersionTLS12,
@@ -175,7 +95,7 @@ func TestOutOfClusterTenancyDialsPortForward(t *testing.T) {
 		serviceCAPEM:       caPEM,
 		serviceCAExpiresAt: time.Now().Add(time.Minute),
 	}
-	pa.tunnel.addr = listener.Addr().String()
+	pa.thanosTunnel.localAddress = listener.Addr().String()
 
 	body, err := pa.getThanosTenancyResponse(context.Background(), ThanosQuerierTenancyAlertsPath, "default")
 	if err != nil {
@@ -194,7 +114,7 @@ func TestOutOfClusterTenancyDialsPortForward(t *testing.T) {
 	}
 }
 
-func TestInClusterTenancyDoesNotUsePortForward(t *testing.T) {
+func TestInClusterThanosTenancyDoesNotUsePortForward(t *testing.T) {
 	t.Setenv("KUBECONFIG", "")
 	t.Setenv(serviceCAFileEnv, "")
 
@@ -216,7 +136,7 @@ func TestInClusterTenancyDoesNotUsePortForward(t *testing.T) {
 	defer server.Close()
 
 	pa := &prometheusAlerts{config: &rest.Config{BearerToken: "test-token"}}
-	pa.tunnel.addr = listener.Addr().String()
+	pa.thanosTunnel.localAddress = listener.Addr().String()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
@@ -230,8 +150,8 @@ func TestInClusterTenancyDoesNotUsePortForward(t *testing.T) {
 	}
 }
 
-func TestOutOfClusterTenancyTrustsExplicitServiceCAFile(t *testing.T) {
-	caPEM, serverCert := mustThanosServerCert(t)
+func TestOutOfClusterThanosTenancyTrustsExplicitServiceCAFile(t *testing.T) {
+	caPEM, serverCert := mustServiceServerCert(t, "thanos-querier.openshift-monitoring.svc")
 	caPath := filepath.Join(t.TempDir(), "service-ca.crt")
 	if err := os.WriteFile(caPath, caPEM, 0o600); err != nil {
 		t.Fatalf("write service CA: %v", err)
@@ -258,14 +178,14 @@ func TestOutOfClusterTenancyTrustsExplicitServiceCAFile(t *testing.T) {
 	defer server.Close()
 
 	pa := &prometheusAlerts{config: &rest.Config{BearerToken: "test-token"}}
-	pa.tunnel.addr = listener.Addr().String()
+	pa.thanosTunnel.localAddress = listener.Addr().String()
 
 	if _, err := pa.getThanosTenancyResponse(context.Background(), ThanosQuerierTenancyAlertsPath, "default"); err != nil {
 		t.Fatalf("tenancy request with explicit service CA: %v", err)
 	}
 }
 
-func mustThanosServerCert(t *testing.T) ([]byte, tls.Certificate) {
+func mustServiceServerCert(t *testing.T, dnsNames ...string) ([]byte, tls.Certificate) {
 	t.Helper()
 
 	caKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -292,8 +212,8 @@ func mustThanosServerCert(t *testing.T) ([]byte, tls.Certificate) {
 	}
 	leafTemplate := &x509.Certificate{
 		SerialNumber: big.NewInt(2),
-		Subject:      pkix.Name{CommonName: "thanos-querier"},
-		DNSNames:     []string{"thanos-querier.openshift-monitoring.svc"},
+		Subject:      pkix.Name{CommonName: "test-service"},
+		DNSNames:     dnsNames,
 		NotBefore:    time.Now().Add(-time.Hour),
 		NotAfter:     time.Now().Add(time.Hour),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
