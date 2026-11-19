@@ -1,5 +1,6 @@
 import { Silence, SilenceStates } from '@openshift-console/dynamic-plugin-sdk';
 
+import type { TableSort } from '@/features/alert-management-api/types/types';
 import { parseTableColumns } from '@/features/alert-management-api/utils/table-columns';
 import { getSilenceName, silenceMatcherEqualitySymbol } from '@/shared/utils/alerts/formatting';
 
@@ -11,12 +12,20 @@ export const silenceColumns = [
   { key: 'endsAt', label: 'Ends' },
   { key: 'createdBy', label: 'Created by' },
 ] as const;
+
 export type SilenceColumn = (typeof silenceColumns)[number]['key'];
+export type SilenceSort = TableSort<SilenceColumn>;
+
+export const defaultSilenceSort: SilenceSort = { column: 'name', direction: 'asc' };
 export const defaultSilenceColumns: SilenceColumn[] = silenceColumns.map(({ key }) => key);
+export const requiredSilenceColumns: SilenceColumn[] = ['name'];
 export const silenceStates = [SilenceStates.Active, SilenceStates.Pending, SilenceStates.Expired];
 export const stateLabels = { active: 'Active', pending: 'Pending', expired: 'Expired' };
+
 export type SilenceFilters = { name: string; state: string[] };
 export const defaultSilenceFilters: SilenceFilters = { name: '', state: [] };
+export const silenceFilterKeys = ['state'] as const;
+
 export const matcherText = (matcher: Silence['matchers'][number]) => {
   const operator = silenceMatcherEqualitySymbol(matcher.isEqual ?? true, matcher.isRegex);
   return `${matcher.name}${operator}${matcher.value}`;
@@ -39,6 +48,7 @@ export const silenceColumnLabel = (column: SilenceColumn, t: (key: string) => st
       return t('Created by');
   }
 };
+
 export const normalizeSilences = (silences: Silence[]) =>
   silences.map((silence) => {
     const normalized = {
@@ -50,9 +60,11 @@ export const normalizeSilences = (silences: Silence[]) =>
     };
     return { ...normalized, name: getSilenceName(normalized) };
   });
+
 export function parseSilenceColumns(value: string | null): SilenceColumn[] {
-  return parseTableColumns(value, silenceColumns, defaultSilenceColumns, ['name']);
+  return parseTableColumns(value, silenceColumns, defaultSilenceColumns, requiredSilenceColumns);
 }
+
 export function filterSilences(silences: Silence[], filters: SilenceFilters) {
   const name = filters.name.trim().toLocaleLowerCase();
   return silences.filter(
@@ -61,16 +73,20 @@ export function filterSilences(silences: Silence[], filters: SilenceFilters) {
       (!filters.state.length || filters.state.includes(silence.status?.state ?? '')),
   );
 }
-export function sortSilences(
-  silences: Silence[],
-  column: SilenceColumn,
-  direction: 'asc' | 'desc',
-) {
+
+export function sortSilences(silences: Silence[], { column, direction }: SilenceSort) {
   const value = (silence: Silence): string | number => {
-    if (column === 'status') return silence.status?.state ?? '';
-    if (column === 'matchers') return silence.matchers.map(matcherText).join(', ');
-    if (column === 'startsAt' || column === 'endsAt') return Date.parse(silence[column]) || 0;
-    return silence[column] ?? '';
+    switch (column) {
+      case 'status':
+        return silence.status?.state ?? '';
+      case 'matchers':
+        return silence.matchers.map(matcherText).join(', ');
+      case 'startsAt':
+      case 'endsAt':
+        return Date.parse(silence[column]) || 0;
+      default:
+        return silence[column] ?? '';
+    }
   };
   return [...silences].sort((a, b) => {
     const left = value(a);

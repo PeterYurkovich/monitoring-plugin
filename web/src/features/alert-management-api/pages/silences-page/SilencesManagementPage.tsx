@@ -15,6 +15,7 @@ import {
   Title,
   Tooltip,
 } from '@patternfly/react-core';
+import { InnerScrollContainer } from '@patternfly/react-table';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
@@ -22,25 +23,33 @@ import { useSearchParams } from 'react-router';
 import { ManageColumnsButton } from '@/features/alert-management-api/components/ManageColumnsButton';
 import { SelectedFilters } from '@/features/alert-management-api/components/SelectedFilters';
 import { TableColumnsModal } from '@/features/alert-management-api/components/TableColumnsModal';
+import { useAlertManagementSort } from '@/features/alert-management-api/hooks/useAlertManagementSort';
 import { useSilencesQuery } from '@/features/alert-management-api/hooks/useSilencesQuery';
 import {
   defaultSilenceColumns,
   defaultSilenceFilters,
+  defaultSilenceSort,
   filterSilences,
   normalizeSilences,
   parseSilenceColumns,
-  SilenceColumn,
+  requiredSilenceColumns,
   silenceColumns,
+  silenceFilterKeys,
   SilenceFilters,
   silenceStates,
   sortSilences,
   stateLabels,
 } from '@/features/alert-management-api/pages/silences-page/silences';
 import { SilencesTable } from '@/features/alert-management-api/pages/silences-page/SilencesTable';
+import {
+  parseFilterParams,
+  serializeFilterParams,
+} from '@/features/alert-management-api/utils/filter-params';
 import { useTablePagination } from '@/shared/components/table/hooks/useTablePagination';
 import { TablePagination } from '@/shared/components/table/TablePagination';
 import { AccessDenied } from '@/shared/console/console-shared/src/components/empty-state/AccessDenied';
 import { LoadingBox } from '@/shared/console/console-shared/src/components/loading/LoadingBox';
+import { QueryParams } from '@/shared/constants/query-params';
 
 export function SilencesManagementPage() {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
@@ -51,63 +60,62 @@ export function SilencesManagementPage() {
   const [selection, setSelection] = useState<{
     scope: string;
     data: typeof silencesQuery.data;
-    updatedAt: number;
+    updatedAtMs: number;
     ids: Set<string>;
   }>();
   const pagination = useTablePagination({ perPage: 20 });
   const { page, perPage, setPage } = pagination;
-  const filters = useMemo<SilenceFilters>(
-    () => ({
-      name: params.get('name') ?? '',
-      state: params
-        .getAll('state')
+  const filters = useMemo<SilenceFilters>(() => {
+    const parsed = parseFilterParams(params, defaultSilenceFilters, silenceFilterKeys);
+    return {
+      ...parsed,
+      state: parsed.state
         .filter((value) => silenceStates.includes(value as (typeof silenceStates)[number]))
         .slice(0, 1),
-    }),
-    [params],
-  );
-  const columns = parseSilenceColumns(params.get('columns'));
-  const column = columns.find((key) => key === params.get('sort')) ?? 'name';
-  const direction = params.get('sortDirection') === 'desc' ? 'desc' : 'asc';
+    };
+  }, [params]);
+  const columns = parseSilenceColumns(params.get(QueryParams.Columns));
+  const { sort, setSort } = useAlertManagementSort(columns, defaultSilenceSort);
+  const { column, direction } = sort;
   const silences = useMemo(() => normalizeSilences(silencesQuery.data ?? []), [silencesQuery.data]);
-  const filtered = useMemo(
-    () => sortSilences(filterSilences(silences, filters), column, direction),
+  const filteredSilences = useMemo(
+    () => sortSilences(filterSilences(silences, filters), { column, direction }),
     [silences, filters, column, direction],
   );
+  const pageSilences = filteredSilences.slice((page - 1) * perPage, page * perPage);
   const filterScope = JSON.stringify(filters);
   // Selection belongs to this filter and data snapshot, never to hidden or refreshed rows.
   const selected =
     selection?.scope === filterScope &&
     selection.data === silencesQuery.data &&
-    selection.updatedAt === silencesQuery.dataUpdatedAt
+    selection.updatedAtMs === silencesQuery.dataUpdatedAt
       ? selection.ids
       : new Set<string>();
-  if (selection && selected !== selection.ids) setSelection(undefined);
+  if (selection && selected !== selection.ids) {
+    setSelection(undefined);
+  }
+
   useEffect(() => {
-    const lastPage = Math.max(1, Math.ceil(filtered.length / perPage));
-    if (silencesQuery.data && page > lastPage) setPage(lastPage, { replace: true });
-  }, [filtered.length, perPage, page, setPage, silencesQuery.data]);
-  const setFilters = (next: SilenceFilters) =>
+    const lastPage = Math.max(1, Math.ceil(filteredSilences.length / perPage));
+    if (silencesQuery.data && page > lastPage) {
+      setPage(lastPage, { replace: true });
+    }
+  }, [filteredSilences.length, perPage, page, setPage, silencesQuery.data]);
+
+  const setFilters = (next: SilenceFilters) => {
     setParams((current) => {
-      const updated = new URLSearchParams(current);
-      updated.delete('name');
-      updated.delete('state');
-      if (next.name) updated.set('name', next.name);
-      next.state.forEach((state) => updated.append('state', state));
-      updated.set('page', '1');
+      const updated = serializeFilterParams(current, next, silenceFilterKeys);
+      updated.set(QueryParams.Page, '1');
       return updated;
     });
-  const onSort = (key: SilenceColumn, next: 'asc' | 'desc') =>
-    setParams((current) => {
-      const updated = new URLSearchParams(current);
-      updated.set('sort', key);
-      updated.set('sortDirection', next);
-      updated.set('page', '1');
-      return updated;
-    });
-  if (silencesQuery.isLoading && !silencesQuery.data) return <LoadingBox />;
-  if (silencesQuery.isError && !silencesQuery.data)
+  };
+
+  if (silencesQuery.isLoading && !silencesQuery.data) {
+    return <LoadingBox />;
+  }
+  if (silencesQuery.isError && !silencesQuery.data) {
     return <AccessDenied message={silencesQuery.error?.message ?? ''} />;
+  }
   return (
     <PageSection hasBodyWrapper={false} isFilled>
       {silencesQuery.isError && (
@@ -175,40 +183,50 @@ export function SilencesManagementPage() {
         <PanelMain>
           <PanelMainBody style={{ paddingBlock: 'var(--pf-t--global--spacer--sm)' }}>
             <TablePagination
-              itemCount={filtered.length}
+              itemCount={filteredSilences.length}
               {...pagination}
               variant="top"
               isCompact
               rightActions={<ManageColumnsButton onClick={() => setColumnsOpen(true)} />}
             />
             <Divider style={{ marginBlockStart: 'var(--pf-t--global--spacer--sm)' }} />
-            <div style={{ overflowX: 'auto' }}>
+            <InnerScrollContainer
+              tabIndex={0}
+              role="region"
+              aria-label={t('Silences table scroll area')}
+            >
               <SilencesTable
-                silences={filtered.slice((page - 1) * perPage, page * perPage)}
+                silences={pageSilences}
                 columns={columns}
-                column={column}
-                direction={direction}
-                onSort={onSort}
+                sort={sort}
+                onSort={(column, direction) => setSort({ column, direction })}
                 selected={selected}
                 onSelect={(ids, checked) =>
                   setSelection(() => {
                     const next = new Set(selected);
                     ids.forEach((id) => {
-                      if (checked) next.add(id);
-                      else next.delete(id);
+                      if (checked) {
+                        next.add(id);
+                      } else {
+                        next.delete(id);
+                      }
                     });
                     return {
                       scope: filterScope,
                       data: silencesQuery.data,
-                      updatedAt: silencesQuery.dataUpdatedAt,
+                      updatedAtMs: silencesQuery.dataUpdatedAt,
                       ids: next,
                     };
                   })
                 }
               />
-            </div>
-            {filtered.length > 0 && (
-              <TablePagination itemCount={filtered.length} {...pagination} variant="bottom" />
+            </InnerScrollContainer>
+            {filteredSilences.length > 0 && (
+              <TablePagination
+                itemCount={filteredSilences.length}
+                {...pagination}
+                variant="bottom"
+              />
             )}
           </PanelMainBody>
         </PanelMain>
@@ -219,15 +237,15 @@ export function SilencesManagementPage() {
           definitions={silenceColumns}
           columns={columns}
           defaults={defaultSilenceColumns}
-          required={['name']}
+          required={requiredSilenceColumns}
           onClose={() => setColumnsOpen(false)}
           onSave={(next) => {
             setParams((current) => {
               const updated = new URLSearchParams(current);
-              updated.set('columns', JSON.stringify(next));
+              updated.set(QueryParams.Columns, JSON.stringify(next));
               if (!next.includes(column)) {
-                updated.delete('sort');
-                updated.delete('sortDirection');
+                updated.delete(QueryParams.Sort);
+                updated.delete(QueryParams.SortDirection);
               }
               return updated;
             });

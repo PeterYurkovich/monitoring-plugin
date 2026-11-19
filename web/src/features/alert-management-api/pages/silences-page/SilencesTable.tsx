@@ -1,91 +1,93 @@
 import { Silence } from '@openshift-console/dynamic-plugin-sdk';
 import { Checkbox, DropdownItem, Label, LabelGroup, Tooltip } from '@patternfly/react-core';
-import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import { Table, Tbody, Td, Tr } from '@patternfly/react-table';
 import { useTranslation } from 'react-i18next';
 
 import {
   matcherText,
   SilenceColumn,
   silenceColumnLabel,
+  SilenceSort,
 } from '@/features/alert-management-api/pages/silences-page/silences';
+import { SilencesTableHeader } from '@/features/alert-management-api/pages/silences-page/SilencesTableHeader';
 import KebabDropdown from '@/shared/components/KebabDropdown';
 import { SilenceState } from '@/shared/components/SilenceState';
 import { EmptyBox } from '@/shared/console/console-shared/src/components/empty-state/EmptyBox';
 
-type Props = {
+type SilencesTableProps = {
   silences: Silence[];
   columns: SilenceColumn[];
-  column: SilenceColumn;
-  direction: 'asc' | 'desc';
-  onSort: (column: SilenceColumn, direction: 'asc' | 'desc') => void;
+  sort: SilenceSort;
+  onSort: (column: SilenceColumn, direction: SilenceSort['direction']) => void;
   selected: Set<string>;
   onSelect: (ids: string[], checked: boolean) => void;
 };
+
 export function SilencesTable({
   silences,
   columns,
-  column,
-  direction,
+  sort,
   onSort,
   selected,
   onSelect,
-}: Props) {
+}: SilencesTableProps) {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
-  const ids = silences.flatMap(({ id }) => (id ? [id] : []));
-  const count = ids.filter((id) => selected.has(id)).length;
-  const cell = (silence: Silence, key: SilenceColumn) => {
-    if (key === 'status') return <SilenceState silence={silence} />;
-    if (key === 'matchers')
-      return (
-        <LabelGroup style={{ maxWidth: '24rem' }}>
-          {silence.matchers.map((matcher, index) => (
-            <Label key={index}>{matcherText(matcher)}</Label>
-          ))}
-        </LabelGroup>
-      );
-    if (key === 'startsAt' || key === 'endsAt') {
-      const timestampMs = Date.parse(silence[key]);
-      return Number.isFinite(timestampMs) ? (
-        <time dateTime={silence[key]}>{new Date(timestampMs).toLocaleString()}</time>
-      ) : (
-        '—'
-      );
-    }
-    return silence[key] || '—';
+  const selectionColumn = {
+    modifier: 'fitContent' as const,
+    isStickyColumn: true,
+    stickyMinWidth: '2rem',
+    stickyLeftOffset: '0',
   };
+  const nameColumn = {
+    modifier: 'nowrap' as const,
+    isStickyColumn: columns[0] === 'name',
+    hasRightBorder: columns[0] === 'name',
+    stickyMinWidth: '12rem',
+    stickyLeftOffset: '2rem',
+  };
+
+  const cell = (silence: Silence, column: SilenceColumn) => {
+    switch (column) {
+      case 'status':
+        return <SilenceState silence={silence} />;
+      case 'matchers':
+        return (
+          <LabelGroup style={{ maxWidth: '24rem' }}>
+            {silence.matchers.map((matcher, index) => (
+              <Label key={index}>{matcherText(matcher)}</Label>
+            ))}
+          </LabelGroup>
+        );
+      case 'startsAt':
+      case 'endsAt': {
+        const timestampMs = Date.parse(silence[column]);
+        return Number.isFinite(timestampMs) ? (
+          <time dateTime={silence[column]}>{new Date(timestampMs).toLocaleString()}</time>
+        ) : (
+          '—'
+        );
+      }
+      default:
+        return silence[column] || '—';
+    }
+  };
+
   return (
-    <Table aria-label={t('Silences table')} variant="compact">
-      <Thead>
-        <Tr>
-          <Th>
-            <Checkbox
-              id="select-page-silences"
-              aria-label={t('Select all silences on this page')}
-              isDisabled={!ids.length}
-              isChecked={count > 0 && count < ids.length ? null : count > 0}
-              onChange={(_, checked) => onSelect(ids, checked)}
-            />
-          </Th>
-          {columns.map((key, index) => (
-            <Th
-              key={key}
-              style={{ minWidth: key === 'name' ? '10rem' : '8rem', whiteSpace: 'nowrap' }}
-              sort={{
-                sortBy: { index: columns.indexOf(column), direction },
-                columnIndex: index,
-                onSort: (_, _index, next) => onSort(key, next),
-              }}
-            >
-              {silenceColumnLabel(key, t)}
-            </Th>
-          ))}
-          <Th screenReaderText={t('Actions')} />
-        </Tr>
-      </Thead>
+    <Table role="table" aria-label={t('Silences table')} variant="compact" gridBreakPoint="">
+      <SilencesTableHeader
+        silences={silences}
+        columns={columns}
+        sort={sort}
+        onSort={onSort}
+        selected={selected}
+        onSelect={onSelect}
+        selectionColumn={selectionColumn}
+        nameColumn={nameColumn}
+      />
       <Tbody>
         {silences.map((silence, index) => (
           <Tr key={silence.id ?? index}>
-            <Td>
+            <Td {...selectionColumn}>
               <Checkbox
                 id={`select-silence-${silence.id ?? index}`}
                 aria-label={t('Select {{name}}', { name: silence.name })}
@@ -94,13 +96,14 @@ export function SilencesTable({
                 onChange={(_, checked) => onSelect(silence.id ? [silence.id] : [], checked)}
               />
             </Td>
-            {columns.map((key) => (
+            {columns.map((column) => (
               <Td
-                key={key}
-                dataLabel={silenceColumnLabel(key, t)}
-                style={{ overflowWrap: 'anywhere' }}
+                key={column}
+                dataLabel={silenceColumnLabel(column, t)}
+                {...(column === 'name' ? nameColumn : {})}
+                style={column === 'name' ? undefined : { overflowWrap: 'anywhere' }}
               >
-                {cell(silence, key)}
+                {cell(silence, column)}
               </Td>
             ))}
             <Td isActionCell>
@@ -118,7 +121,7 @@ export function SilencesTable({
             </Td>
           </Tr>
         ))}
-        {!silences.length && (
+        {silences.length === 0 && (
           <Tr>
             <Td colSpan={columns.length + 2}>
               <EmptyBox customMessage={t('No silences found')} />

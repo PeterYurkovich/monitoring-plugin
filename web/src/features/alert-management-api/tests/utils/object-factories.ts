@@ -1,4 +1,10 @@
-import { Alert, AlertStates, RuleStates } from '@openshift-console/dynamic-plugin-sdk';
+import {
+  Alert,
+  AlertStates,
+  RuleStates,
+  Silence,
+  SilenceStates,
+} from '@openshift-console/dynamic-plugin-sdk';
 
 import { toManagedRule } from '@/features/alert-management-api/pages/rules-page/utils/rules';
 import {
@@ -39,6 +45,18 @@ export const makeAlert = (overrides: Partial<Alert> = {}): Alert => ({
 
 export const makeManagedAlert = (overrides: Partial<ManagedAlert> = {}): ManagedAlert => ({
   ...toManagedAlert(makeAlert(overrides)),
+  ...overrides,
+});
+
+export const makeSilence = (overrides: Partial<Silence> = {}): Silence => ({
+  id: 'silence-example',
+  comment: '',
+  createdBy: 'admin',
+  startsAt: '2026-01-01T00:00:00Z',
+  endsAt: '2026-01-02T00:00:00Z',
+  firingAlerts: [],
+  matchers: [{ name: 'alertname', value: 'Example', isEqual: true, isRegex: false }],
+  status: { state: SilenceStates.Active },
   ...overrides,
 });
 
