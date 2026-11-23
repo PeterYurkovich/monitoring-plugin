@@ -7,15 +7,17 @@ type ScopeFilterProps = {
   selected: string[];
   onChange: (scopes: string[]) => void;
   ariaLabel?: string;
+  label: string;
+  tooltip: string;
 };
 
-export function ScopeFilter({ selected, onChange, ariaLabel }: ScopeFilterProps) {
+export function ScopeFilter({ selected, onChange, ariaLabel, label, tooltip }: ScopeFilterProps) {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
 
   return (
     <div>
-      <AlertFilterLabel label="Alert scope" tooltip="Alert scope tooltip" />
-      <ToggleGroup isCompact aria-label={ariaLabel ?? t('Alert scope')}>
+      <AlertFilterLabel label={label} tooltip={tooltip} />
+      <ToggleGroup isCompact aria-label={ariaLabel ?? label}>
         <ToggleGroupItem
           text={t('All')}
           isSelected={selected.length === 0}

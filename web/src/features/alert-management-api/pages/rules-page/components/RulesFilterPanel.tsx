@@ -67,7 +67,12 @@ export function RulesFilterPanel({ rules, filters, onChange, onClose }: RulesFil
         onChange={(severity) => onChange({ ...filters, severity })}
       />
       <Divider />
-      <ScopeFilter selected={filters.scope} onChange={(scope) => onChange({ ...filters, scope })} />
+      <ScopeFilter
+        label={t('Alert scope')}
+        tooltip={t('Alert scope tooltip')}
+        selected={filters.scope}
+        onChange={(scope) => onChange({ ...filters, scope })}
+      />
       <Divider />
       {(['component', 'enablement', 'alertStates', 'source', 'managedBy'] as const).map((key) => (
         <AlertFilterSelect

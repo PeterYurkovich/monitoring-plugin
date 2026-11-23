@@ -76,7 +76,7 @@ export function AlertFilterSelect({
     >
       {!hideLabel &&
         (labelTooltip ? (
-          <AlertFilterLabel label={label} tooltip={labelTooltip} />
+          <AlertFilterLabel label={t(label)} tooltip={t(labelTooltip)} />
         ) : (
           <strong>{t(label)}</strong>
         ))}

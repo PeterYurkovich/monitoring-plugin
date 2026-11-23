@@ -120,6 +120,8 @@ export function AlertsFilterDrawer({ alerts, filters, onChange, onClose }: Props
       />
       <Divider />
       <ScopeFilter
+        label={t('Alert scope')}
+        tooltip={t('Alert scope tooltip')}
         selected={filters.scope}
         ariaLabel={t('Scope')}
         onChange={(scope) => onChange({ ...filters, scope })}
