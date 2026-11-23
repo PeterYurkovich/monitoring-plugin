@@ -43,6 +43,51 @@ This is a cluster configuration choice and does not change the plugin API shape.
 
 The plugin intentionally reads from only the in-cluster Alertmanager endpoints. Supporting multiple external Alertmanagers would introduce ambiguous alert state and silencing outcomes because each instance can apply different routing, inhibition, and silence configurations.
 
+### Reading silences in the frontend
+
+The silences page reads Alertmanager directly; no Management API silences endpoint
+is needed because the frontend does not add backend metadata.
+
+`useSilencesQuery` runs one aggregate TanStack Query:
+
+1. Try the non-tenancy Alertmanager silences endpoint.
+2. On failure, list accessible OpenShift Projects using the Console SDK's
+   `k8sListItems`. Project names identify accessible namespaces, including for users
+   who cannot list cluster-scoped Namespace resources.
+3. Query each namespace's tenancy endpoint in parallel with `Promise.allSettled`.
+   Wait for every request, merge successful responses, and deduplicate by silence ID.
+
+An empty successful namespace response counts as success. Individual namespace
+failures are treated as RBAC checks, not aggregate errors. If every namespace
+request fails, the query fails; project discovery failures also fail the query.
+An empty project list rethrows the original non-tenancy error because no silences
+request has succeeded.
+
+The initial query stays loading throughout discovery and fanout. Refetches retain
+cached data and expose `isFetching`, following TanStack Query's normal background
+refresh behavior. The query's abort signal is passed to all requests; cancellation
+must not initiate fallback or publish partial results. Automatic retries are disabled
+so expected authorization failures do not repeat the entire fanout. Polling and
+explicit refetches run the complete sequence again.
+
+#### TanStack Query research
+
+This repository uses TanStack Query v4:
+
+- [Dependent queries](https://tanstack.com/query/v4/docs/framework/react/guides/dependent-queries):
+  use `enabled` for separately cached sequential queries; a dynamic `useQueries`
+  list can depend on a discovery query.
+- [Parallel queries](https://tanstack.com/query/v4/docs/framework/react/guides/parallel-queries):
+  use `useQueries` when the number of independently cached queries changes.
+- [Query functions](https://tanstack.com/query/v4/docs/framework/react/guides/query-functions):
+  any promise-returning async function is supported. This implementation uses one
+  query function because consumers need one combined result and one loading/error
+  lifecycle, rather than separate namespace caches and status aggregation.
+- [Query cancellation](https://tanstack.com/query/v4/docs/framework/react/guides/query-cancellation):
+  pass the same abort signal to all underlying requests. The documentation also
+  demonstrates fanout within one query function. Here `Promise.allSettled` replaces
+  fail-fast `Promise.all` to implement partial-success semantics.
+
 ### Managing alert rules via the Management API
 
 | Operation | Single | Bulk |

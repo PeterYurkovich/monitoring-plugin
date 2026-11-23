@@ -1,4 +1,7 @@
+import { Silence } from '@openshift-console/dynamic-plugin-sdk';
+
 import rulesResponse from '@/features/alert-management-api/tests/fixtures/rules.json';
+import silencesResponse from '@/features/alert-management-api/tests/fixtures/silences.json';
 import {
   AlertingRule,
   GetAlertsResponse,
@@ -214,6 +217,22 @@ export const getMockRulesResponse = (): GetRulesResponse => {
 
 export const getMockAlertingRulesResponse = (response = getMockRulesResponse()): AlertingRule[] =>
   response.data.groups.flatMap((group) => group.rules).filter((rule) => rule.type === 'alerting');
+
+export const getMockSilencesResponse = (): Silence[] =>
+  structuredClone(silencesResponse) as Silence[];
+
+export const getMockAlertsResponse = (): GetAlertsResponse => ({
+  data: {
+    alerts: getMockAlertingRulesResponse().flatMap((rule) =>
+      rule.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...rule.labels, alertname: rule.name, ...alert.labels },
+        activeAt: alert.activeAt ?? minutesAgo(1),
+        alertRuleId: rule.labels.openshift_io_alert_rule_id,
+      })),
+    ),
+  },
+});
 
 export const getMockSilencedAlertsResponse = (): GetAlertsResponse => ({
   data: {

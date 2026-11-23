@@ -7,15 +7,18 @@ import { QueryParamProvider } from 'use-query-params';
 
 import { AlertManagementLayout } from '@/features/alert-management-api/components/AlertManagementLayout';
 import { AlertManagementProvider } from '@/features/alert-management-api/pages/AlertManagementRouter';
-import { SilencesManagementPage } from '@/features/alert-management-api/pages/PlaceholderPages';
-import { AlertRulesManagementPage } from '@/features/alert-management-api/pages/rules-page/RulesPage';
+import {
+  AlertRulesManagementPage,
+  SilencesManagementPage,
+} from '@/features/alert-management-api/pages/PlaceholderPages';
 import { McpCmoAlertingPage } from '@/features/incidents/pages/IncidentsPage';
 import { ReactRouter7Adapter } from '@/shared/utils/react-router-7-adapter';
 
 const flags = vi.hoisted(() => ({ incidents: false }));
 const queryTimes = vi.hoisted(() => ({
   rules: Date.UTC(2026, 8, 29, 12, 15, 0),
-  alerts: Date.UTC(2026, 8, 29, 12, 16, 15),
+  alerts: Date.UTC(2026, 8, 29, 12, 17, 0),
+  silences: Date.UTC(2026, 8, 29, 12, 16, 15),
 }));
 
 vi.mock('@/features/incidents/pages/IncidentsPage', () => ({
@@ -30,6 +33,7 @@ vi.mock('@/features/alert-management-api/hooks/useAlertManagementData', () => ({
   useAlertManagementData: () => ({
     rulesQuery: { dataUpdatedAt: queryTimes.rules },
     alertsQuery: { dataUpdatedAt: queryTimes.alerts },
+    silencesQuery: { dataUpdatedAt: queryTimes.silences },
   }),
 }));
 

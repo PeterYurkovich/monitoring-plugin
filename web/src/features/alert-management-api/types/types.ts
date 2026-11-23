@@ -1,4 +1,4 @@
-import { Alert, AlertStates, Rule } from '@openshift-console/dynamic-plugin-sdk';
+import { Alert, AlertStates, Rule, Silence } from '@openshift-console/dynamic-plugin-sdk';
 
 export type ManagedAlert = Alert & {
   alertScope: string;
@@ -75,6 +75,7 @@ export type TableSort<Column extends string> = {
 };
 
 export type AlertManagementData = {
-  rules: Rule[];
+  rules: RuleWithEnablement[];
   alerts: ManagedAlert[];
+  silences: Silence[];
 };
