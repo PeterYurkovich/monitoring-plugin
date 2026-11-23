@@ -6,7 +6,8 @@ import { ProjectModel } from '@/shared/console/models';
 import { useMonitoring } from '@/shared/hooks/useMonitoring';
 import { getAlertmanagerSilencesUrl, Prometheus } from '@/shared/utils/utils';
 
-const useMockResponses = process.env.NODE_ENV === 'development';
+const useMockResponses = false;
+// const useMockResponses = process.env.NODE_ENV === 'development';
 
 const fetchSilences = async (prometheus: Prometheus, signal?: AbortSignal): Promise<Silence[]> => {
   const nonTenancySilencesUrl = getAlertmanagerSilencesUrl({ prometheus, useTenancyPath: false });

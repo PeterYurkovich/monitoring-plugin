@@ -224,10 +224,11 @@ export const getMockSilencesResponse = (): Silence[] =>
 export const getMockAlertsResponse = (): GetAlertsResponse => ({
   data: {
     alerts: getMockAlertingRulesResponse().flatMap((rule) =>
-      rule.alerts.map((alert) => ({
+      rule.alerts.map((alert, index) => ({
         ...alert,
         labels: { ...rule.labels, alertname: rule.name, ...alert.labels },
         activeAt: alert.activeAt ?? minutesAgo(1),
+        state: alert.state === 'firing' && index % 2 === 0 ? 'silenced' : alert.state,
         alertRuleId: rule.labels.openshift_io_alert_rule_id,
       })),
     ),

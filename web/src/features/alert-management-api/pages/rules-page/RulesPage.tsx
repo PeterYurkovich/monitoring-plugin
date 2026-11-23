@@ -57,7 +57,7 @@ const filtersId = 'alert-rule-filters';
 
 export function AlertRulesManagementPage() {
   const { t } = useTranslation(process.env.I18N_NAMESPACE);
-  const { data, rulesQuery, alertsQuery } = useAlertManagementData();
+  const { data, rulesQuery, alertsQuery, silencesQuery } = useAlertManagementData();
   const [params, setParams] = useSearchParams();
 
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -100,28 +100,34 @@ export function AlertRulesManagementPage() {
   // A refresh or browser navigation can shrink the result set, so reset page if it does not exist
   useEffect(() => {
     const lastPage = Math.max(1, Math.ceil(filteredRules.length / perPage));
-    if (!rulesQuery.isLoading && page > lastPage) {
+    if (data && page > lastPage) {
       setPage(lastPage, { replace: true });
     }
-  }, [filteredRules, page, perPage, rulesQuery.isLoading, setPage]);
+  }, [filteredRules, page, perPage, data, setPage]);
 
-  if (rulesQuery.isLoading && !rulesQuery.data) {
+  const isLoading =
+    (rulesQuery.isLoading && !rulesQuery.data) ||
+    (alertsQuery.isLoading && !alertsQuery.data) ||
+    (silencesQuery.isLoading && !silencesQuery.data);
+  const error = rulesQuery.error ?? alertsQuery.error;
+
+  if (isLoading) {
     return <LoadingBox />;
   }
 
-  if (rulesQuery.isError && !data) {
-    return <AccessDenied message={rulesQuery.error?.message ?? ''} />;
+  if ((rulesQuery.isError || alertsQuery.isError) && !data) {
+    return <AccessDenied message={error?.message ?? ''} />;
   }
 
   return (
     <PageSection hasBodyWrapper={false} isFilled>
-      {rulesQuery.isError && (
+      {(rulesQuery.isError || alertsQuery.isError) && (
         <Alert isInline variant="warning" title={t('Alert rules could not be refreshed')}>
-          {rulesQuery.error?.message}
+          {error?.message}
         </Alert>
       )}
-      {alertsQuery.isError && (
-        <Alert isInline variant="warning" title={t('Silenced alerts could not be loaded')} />
+      {silencesQuery.isError && (
+        <Alert isInline variant="warning" title={t('Silences could not be loaded')} />
       )}
       <PageWithFilters
         filtersId={filtersId}

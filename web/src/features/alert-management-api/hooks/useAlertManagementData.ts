@@ -25,9 +25,7 @@ const useMockResponses = false;
 export const useAlertManagementData = (refreshIntervalMs: number | false = false) => {
   const rulesQuery = useGetRules(undefined, {
     query: {
-      ...(useMockResponses
-        ? { queryFn: () => Promise.resolve(getMockRulesResponse()) }
-        : {}),
+      ...(useMockResponses ? { queryFn: () => Promise.resolve(getMockRulesResponse()) } : {}),
       refetchInterval: refreshIntervalMs,
     },
   });

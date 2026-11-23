@@ -10,8 +10,8 @@ import {
   toManagedRule,
 } from '@/features/alert-management-api/pages/rules-page/utils/rules';
 import {
+  getMockAlertsResponse,
   getMockRulesResponse,
-  getMockSilencedAlertsResponse,
 } from '@/features/alert-management-api/tests/fixtures/mock-responses';
 import { defaultRuleSort } from '@/features/alert-management-api/utils/sort-rules';
 
@@ -22,10 +22,10 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-const rules = processAlertManagementData(
-  getMockRulesResponse(),
-  getMockSilencedAlertsResponse(),
-)!.rules.map(toManagedRule);
+const rules = processAlertManagementData(getMockRulesResponse(), getMockAlertsResponse(), {
+  data: [],
+  isLoading: false,
+})!.rules.map(toManagedRule);
 
 function renderHeader(props: Partial<ComponentProps<typeof RulesTableHeader>> = {}) {
   return render(

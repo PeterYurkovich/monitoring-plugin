@@ -27,6 +27,7 @@ vi.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   AlertSeverity: { Critical: 'critical', Warning: 'warning', Info: 'info', None: 'none' },
   AlertStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced' },
   RuleStates: { Inactive: 'inactive' },
+  SilenceStates: { Active: 'active', Pending: 'pending', Expired: 'expired' },
   ResourceLink: ({ kind, name }: { kind: string; name: string }) => (
     <span>
       {kind}: {name}

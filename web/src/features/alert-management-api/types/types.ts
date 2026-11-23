@@ -49,6 +49,11 @@ export type RuleFilters = {
 
 export type RuleFilterKey = keyof Omit<RuleFilters, 'name'>;
 
+export type ManagedSilence = Silence & {
+  name: string;
+  firingAlerts: Alert[];
+};
+
 export type AlertFilterOption = {
   value: string;
   label: string;

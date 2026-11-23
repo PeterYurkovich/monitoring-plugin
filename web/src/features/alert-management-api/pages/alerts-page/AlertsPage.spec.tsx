@@ -52,6 +52,8 @@ vi.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   useToast: () => ({ addToast }),
   AlertSeverity: { Critical: 'critical', Warning: 'warning', Info: 'info', None: 'none' },
   AlertStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced' },
+  SilenceStates: { Active: 'active', Pending: 'pending', Expired: 'expired' },
+  RuleStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced', Inactive: 'inactive' },
   DocumentTitle: () => null,
   Timestamp: () => null,
   ListPageHeader: ({ title, children }: { title: string; children?: ReactNode }) => (

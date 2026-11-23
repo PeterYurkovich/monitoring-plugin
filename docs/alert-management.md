@@ -45,8 +45,16 @@ The plugin intentionally reads from only the in-cluster Alertmanager endpoints. 
 
 ### Reading silences in the frontend
 
-The silences page reads Alertmanager directly; no Management API silences endpoint
-is needed because the frontend does not add backend metadata.
+`useAlertManagementData` combines Management API alerts and rules with silences
+read directly from Alertmanager; no Management API silences endpoint is needed.
+The alerts, rules, and silences tables consume this shared result, including the
+precomputed firing alerts on each silence, rather than independently matching
+instances. Alertmanager instances take precedence over their evaluated duplicates.
+
+Initial data processing waits for alerts, rules, and the silences request to settle.
+If silences cannot be loaded, alerts and rules remain available with a warning; the
+silences table reports the error instead of displaying an empty list. Background
+refresh errors retain cached data.
 
 `useSilencesQuery` runs one aggregate TanStack Query:
 

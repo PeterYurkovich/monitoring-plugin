@@ -5,8 +5,8 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { processAlertManagementData } from '@/features/alert-management-api/hooks/useAlertManagementData';
 import { AlertRulesManagementPage } from '@/features/alert-management-api/pages/rules-page/RulesPage';
 import {
+  getMockAlertsResponse,
   getMockRulesResponse,
-  getMockSilencedAlertsResponse,
 } from '@/features/alert-management-api/tests/fixtures/mock-responses';
 import { RuleWithEnablement } from '@/features/alert-management-api/types/types';
 
@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
   loading: false,
   error: false,
   alertsError: false,
+  silencesError: false,
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -25,6 +26,8 @@ vi.mock('react-i18next', () => ({
 vi.mock('@openshift-console/dynamic-plugin-sdk', () => ({
   AlertSeverity: { Critical: 'critical', Warning: 'warning', Info: 'info', None: 'none' },
   AlertStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced' },
+  SilenceStates: { Active: 'active', Pending: 'pending', Expired: 'expired' },
+  RuleStates: { Firing: 'firing', Pending: 'pending', Silenced: 'silenced', Inactive: 'inactive' },
   ResourceIcon: () => <span>AR</span>,
 }));
 vi.mock('@/features/alert-management-api/hooks/useAlertManagementData', async (importOriginal) => ({
@@ -34,6 +37,7 @@ vi.mock('@/features/alert-management-api/hooks/useAlertManagementData', async (i
   useAlertManagementData: () => ({
     data: state.error ? undefined : { rules: state.rules },
     alertsQuery: { isError: state.alertsError },
+    silencesQuery: { isError: state.silencesError },
     rulesQuery: {
       isLoading: state.loading,
       isError: state.error,
@@ -45,7 +49,8 @@ vi.mock('@/features/alert-management-api/hooks/useAlertManagementData', async (i
 
 const rules: RuleWithEnablement[] = processAlertManagementData(
   getMockRulesResponse(),
-  getMockSilencedAlertsResponse(),
+  getMockAlertsResponse(),
+  { data: [], isLoading: false },
 )!.rules;
 
 function fixtureRule(name: string): RuleWithEnablement {
@@ -76,6 +81,7 @@ beforeEach(() => {
   state.loading = false;
   state.error = false;
   state.alertsError = false;
+  state.silencesError = false;
 });
 
 it('lists inactive rules, paginates, and does not add cluster fields or a details sidebar', () => {
@@ -656,13 +662,22 @@ it('shows enablement and only the silenced count for fully suppressed instances'
   expect(within(tableRows()[0]).getByText('1 Silenced')).toBeDefined();
 });
 
-it('keeps rules visible and warns when silenced alerts could not be loaded', () => {
-  state.alertsError = true;
-  state.rules = processAlertManagementData(getMockRulesResponse(), undefined)!.rules;
+it('keeps rules visible and warns when silences could not be loaded', () => {
+  state.silencesError = true;
+  const alerts = getMockAlertsResponse();
+  alerts.data.alerts.forEach((alert) => {
+    if (alert.state === 'silenced') {
+      alert.state = 'firing';
+    }
+  });
+  state.rules = processAlertManagementData(getMockRulesResponse(), alerts, {
+    data: undefined,
+    isLoading: false,
+  })!.rules;
 
   renderPage();
 
-  expect(screen.getByText('Silenced alerts could not be loaded')).toBeDefined();
+  expect(screen.getByText('Silences could not be loaded')).toBeDefined();
   expect(tableRows()).toHaveLength(20);
 
   const row = screen.getByText('AlertmanagerReceiversNotConfigured').closest('tr')!;
