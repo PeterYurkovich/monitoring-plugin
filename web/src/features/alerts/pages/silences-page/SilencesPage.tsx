@@ -15,8 +15,6 @@ import {
   PageSection,
   PaginationVariant,
   Alert as PFAlert,
-  Stack,
-  StackItem,
 } from '@patternfly/react-core';
 import DataView from '@patternfly/react-data-view/dist/dynamic/DataView';
 import DataViewTable, { DataViewTr } from '@patternfly/react-data-view/dist/dynamic/DataViewTable';
@@ -33,7 +31,6 @@ import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 
-import { SeverityCounts } from '@/features/alerts/components/AlertUtils';
 import {
   ExpireSilenceModal,
   SilenceMatchersList,
@@ -43,8 +40,8 @@ import {
   SilenceFilterOptions,
   SilenceFilters,
 } from '@/features/alerts/pages/silences-page/filter-silences';
-import { StateTimestamp } from '@/shared/components/AlertState';
-import { SilenceState } from '@/shared/components/SilenceState';
+import { SeverityCounts } from '@/shared/components/SeverityCounts';
+import { SilenceStateWithTimestamp } from '@/shared/components/SilenceStateWithTimestamp';
 import { useTableColumns } from '@/shared/components/table/hooks/useTableColumns';
 import { rowFilter, useTableFilters } from '@/shared/components/table/hooks/useTableFilters';
 import { useTablePagination } from '@/shared/components/table/hooks/useTablePagination';
@@ -219,24 +216,7 @@ const SilencesPage_: FC = () => {
             },
             { cell: <SeverityCounts alerts={silence.firingAlerts} /> },
             {
-              cell: (
-                <Stack>
-                  <StackItem>
-                    <SilenceState silence={silence} />
-                  </StackItem>
-                  <StackItem>
-                    {silenceState(silence) === SilenceStates.Pending && (
-                      <StateTimestamp text={t('Starts')} timestamp={silence.startsAt} />
-                    )}
-                    {silenceState(silence) === SilenceStates.Active && (
-                      <StateTimestamp text={t('Ends')} timestamp={silence.endsAt} />
-                    )}
-                    {silenceState(silence) === SilenceStates.Expired && (
-                      <StateTimestamp text={t('Expired')} timestamp={silence.endsAt} />
-                    )}
-                  </StackItem>
-                </Stack>
-              ),
+              cell: <SilenceStateWithTimestamp silence={silence} />,
             },
             silence.createdBy || '',
             ...(perspective === 'acm'
@@ -254,7 +234,6 @@ const SilencesPage_: FC = () => {
     namespace,
     silences,
     perspective,
-    t,
     rowActions,
     sortBy,
     direction,

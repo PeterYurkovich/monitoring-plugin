@@ -167,7 +167,7 @@ const isRuleFiring = (rule: PrometheusRule) =>
   rule?.state === RuleStates.Silenced ||
   rule?.state === RuleStates.Pending;
 
-const isAlertSilenced = (alert: PrometheusAlert, silence: Silence): boolean =>
+export const isAlertSilenced = (alert: PrometheusAlert, silence: Silence): boolean =>
   isAlertFiring(alert) &&
   silence.matchers.every((matcher) => {
     const alertValue = alert.labels[matcher.name] ?? '';

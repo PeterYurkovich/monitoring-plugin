@@ -13,7 +13,6 @@ import {
   DescriptionListTerm,
   Alert as PFAlert,
   Popover,
-  Tooltip,
 } from '@patternfly/react-core';
 import * as _ from 'lodash-es';
 import type { FC, ReactNode } from 'react';
@@ -139,35 +138,6 @@ export const SourceHelp: FC = () => {
   );
 };
 
-export const SeverityCounts: FC<{ alerts: Alert[] }> = ({ alerts }) => {
-  if (_.isEmpty(alerts)) {
-    return <>-</>;
-  }
-
-  const counts = _.countBy(alerts, (a) => {
-    const { severity } = a.labels;
-    return severity === AlertSeverity.Critical || severity === AlertSeverity.Warning
-      ? severity
-      : AlertSeverity.Info;
-  });
-
-  const severities = [AlertSeverity.Critical, AlertSeverity.Warning, AlertSeverity.Info].filter(
-    (s) => counts[s] > 0,
-  );
-
-  return (
-    <>
-      {severities.map((s) => (
-        <Tooltip
-          key={s}
-          content={`${counts[s]} ${s ? s[0].toUpperCase() + s.slice(1) : 'Unknown'} Alerts`}
-        >
-          <SeverityBadge severity={s} count={counts[s]} />
-        </Tooltip>
-      ))}
-    </>
-  );
-};
 export type OnToggle = (value: boolean, e: MouseEvent) => void;
 
 export const severityRowFilter = (t): RowFilter => ({
